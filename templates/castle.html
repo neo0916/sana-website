@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 霍格華茲大禮堂</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #030303;
+            color: #f4e8d1;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場特效：將 scale(1.02) 降級為純透明度淡入淡出，100% 解決背景放大破版 Bug！ */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        .great-hall {
+            position: relative;
+            min-height: 100vh;
+            background-image: url('/static/great_hall.webp');
+            /* 🔒 完美原裝 .jpg 檔名路徑 */
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px;
+            box-sizing: border-box;
+        }
+
+        .great-hall::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 30%, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.85) 100%);
+            z-index: 1;
+        }
+
+        /* 🌐 右上角古典懸浮多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標，確保點擊通暢 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 返回大廳鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 105;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        .hall-title {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            letter-spacing: 4px;
+            text-align: center;
+            color: #ffd700;
+            text-shadow: 0px 4px 15px rgba(255, 215, 0, 0.4), 0 0 30px rgba(0, 0, 0, 0.9);
+            margin-top: 40px;
+            margin-bottom: 30px;
+        }
+
+        /* ==================== 📜 開合式皇家聖卷 3D 特效區 ==================== */
+
+        .parchment-sealed-trigger {
+            position: relative;
+            z-index: 5;
+            max-width: 650px;
+            width: 100%;
+            background: linear-gradient(135deg, #1c120c 0%, #0f0a06 100%);
+            border: 1px solid #c5a059;
+            border-radius: 30px;
+            padding: 15px 40px;
+            box-sizing: border-box;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 15px rgba(197, 160, 89, 0.2);
+            margin: 0 auto 50px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .parchment-sealed-trigger:hover {
+            transform: translateY(-4px) scale(1.02);
+            border-color: #ffd700;
+            box-shadow: 0 20px 45px rgba(255, 215, 0, 0.15);
+        }
+
+        .trigger-text {
+            font-family: 'Cinzel', serif;
+            font-size: 14.5px;
+            font-weight: 900;
+            color: #ffd700;
+            letter-spacing: 1.5px;
+        }
+
+        .sana-sacred-parchment-wrapper {
+            max-width: 850px;
+            width: 100%;
+            display: none;
+            opacity: 0;
+            transform: scaleY(0);
+            transform-origin: top center;
+            transition: transform 0.6s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.5s ease;
+            margin: 0 auto 50px auto;
+            position: relative;
+            z-index: 5;
+        }
+
+        .sana-sacred-parchment-wrapper.unrolled {
+            display: block;
+            opacity: 1;
+            transform: scaleY(1);
+        }
+
+        .sana-sacred-parchment {
+            background-image: url('/static/sana_parchment_bg.webp');
+            /* 🔒 完美原裝 .jpg 檔名路徑 */
+            background-size: 100% 100%;
+            background-position: center;
+            border: 2px solid #8b6508;
+            outline: 1px solid #ffd700;
+            border-radius: 4px;
+            padding: 190px 50px 85px 50px;
+            max-width: 820px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.95);
+            display: flex;
+            gap: 40px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .parchment-portrait-shrine {
+            width: 230px;
+            height: 330px;
+            flex-shrink: 0;
+            border: 3px double #8b6508;
+            outline: 1px solid #ffd700;
+            border-radius: 2px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
+            background: #111;
+            overflow: hidden;
+            position: relative;
+            margin-top: 10px;
+        }
+
+        .parchment-portrait-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.6s ease;
+        }
+
+        .parchment-portrait-shrine:hover .parchment-portrait-img {
+            transform: scale(1.06);
+        }
+
+        .parchment-info-hall {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .parchment-reg-header {
+            font-size: 14.5px;
+            font-weight: 900;
+            color: #4a148c;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px dashed rgba(74, 20, 140, 0.25);
+            padding-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .close-parchment-x {
+            font-size: 26px;
+            cursor: pointer;
+            color: #b91c1c;
+            font-weight: 900;
+            line-height: 1;
+        }
+
+        .close-parchment-x:hover {
+            color: #ff0000;
+            transform: scale(1.1);
+        }
+
+        .parchment-grid-row {
+            display: flex;
+            margin-bottom: 20px;
+            font-size: 15px;
+            line-height: 1.7;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(139, 101, 8, 0.12);
+            padding-bottom: 10px;
+        }
+
+        .parchment-grid-row:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+            padding-bottom: 0;
+        }
+
+        .parchment-master-label {
+            width: 140px;
+            color: #5c4033;
+            font-family: 'Cinzel', serif;
+            letter-spacing: 2px;
+            flex-shrink: 0;
+            font-weight: 900;
+        }
+
+        .parchment-master-val {
+            color: #1a0f08;
+            text-align: justify;
+        }
+
+        /* ==================== 📥 5大超連結流體傳送門按鈕盒子 ==================== */
+        .portal-btn-box {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 14px;
+            max-width: 1100px;
+            margin: 0 auto 50px auto;
+            position: relative;
+            z-index: 2;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        .portal-btn-box a,
+        .portal-btn-box button {
+            text-decoration: none;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            letter-spacing: 2px;
+            padding: 10px 25px;
+            border-radius: 3px;
+            transition: all 0.3s;
+            box-sizing: border-box;
+            display: inline-block;
+            font-weight: 700;
+        }
+
+        .portal-link {
+            color: #ffd700;
+            border: 1px solid #c5a059;
+            background: rgba(15, 10, 5, 0.7);
+        }
+
+        .portal-link:hover {
+            box-shadow: 0 0 15px #6b21a8;
+            border-color: #ffd700;
+        }
+
+        /* ==================== ⏳ 歷史編年史時光軸展台 ==================== */
+        .timeline-container {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 1000px;
+            margin: 40px auto 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 80px;
+            box-sizing: border-box;
+        }
+
+        .timeline-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 2px;
+            background: linear-gradient(to bottom, transparent, #ffd700, #6b21a8, transparent);
+            transform: translateX(-50%);
+            box-shadow: 0 0 10px #ffd700;
+        }
+
+        .timeline-item {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: flex-start;
+            box-sizing: border-box;
+        }
+
+        .timeline-item:nth-child(even) {
+            justify-content: flex-end;
+        }
+
+        .crystal-node {
+            position: absolute;
+            left: 50%;
+            top: 40px;
+            transform: translateX(-50%);
+            width: 45px;
+            height: 80px;
+            background-image: url('/static/trophy.webp');
+            /* 🔒 完美原裝 .png 檔名路徑 */
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            z-index: 3;
+            cursor: pointer;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), filter 0.4s ease;
+            filter: drop-shadow(0 0 5px rgba(0, 191, 255, 0.5));
+        }
+
+        .timeline-item:hover .crystal-node {
+            transform: translateX(-50%) scale(1.2) rotate(5deg);
+            filter: drop-shadow(0 0 20px rgba(0, 191, 255, 0.9)) brightness(1.2);
+        }
+
+        .timeline-card {
+            width: 44%;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 6px;
+            box-sizing: border-box;
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            backdrop-filter: blur(8px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-image-box {
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+            position: relative;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.4);
+            background-color: #0c0806;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .timeline-item:hover .card-image {
+            transform: scale(1.03);
+        }
+
+        .card-text-box {
+            padding: 22px;
+        }
+
+        .card-year {
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: #ffd700;
+            margin: 0 0 5px 0;
+            font-weight: 900;
+        }
+
+        .card-title {
+            font-size: 17px;
+            color: #ffffff;
+            margin: 0 0 12px 0;
+            font-weight: 800;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.25);
+            padding-bottom: 8px;
+        }
+
+        .card-preview {
+            font-size: 13.5px;
+            line-height: 1.6;
+            color: #d4c5b3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* 歷史解密大彈窗 */
+        .magic-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 300;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .magic-popup.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .popup-content {
+            background-image: url('/static/paper.webp');
+            /* 🔒 完美原裝 .jpg 檔名路徑 */
+            background-size: cover;
+            background-position: center;
+            width: 90%;
+            max-width: 580px;
+            max-height: 85vh;
+            border-radius: 6px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            box-sizing: border-box;
+            overflow-y: auto;
+            position: relative;
+            color: #1a0f08;
+            transform: scale(0.85) translateY(30px);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            scrollbar-width: none;
+        }
+
+        .popup-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .magic-popup.active .popup-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .popup-image-box {
+            width: 100%;
+            height: 300px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background-color: #150f0c;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 100%;
+        }
+
+        .popup-year {
+            font-family: 'Cinzel', serif;
+            font-size: 28px;
+            color: #4a148c;
+            margin-bottom: 5px;
+            font-weight: 900;
+        }
+
+        .popup-title {
+            font-size: 22px;
+            color: #000;
+            margin-bottom: 20px;
+            font-weight: 900;
+            border-bottom: 2px solid rgba(74, 20, 140, 0.2);
+            padding-bottom: 10px;
+        }
+
+        .popup-event {
+            font-size: 15px;
+            line-height: 2.1;
+            text-align: justify;
+            margin-bottom: 20px;
+            font-weight: 800;
+            text-indent: 30px;
+        }
+
+        .popup-achievement {
+            font-size: 14px;
+            background: rgba(107, 33, 168, 0.1);
+            border-left: 4px solid #4a148c;
+            padding: 12px 15px;
+            border-radius: 2px;
+            font-weight: 900;
+            color: #4a148c;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 28px;
+            cursor: pointer;
+            color: #4a148c;
+            transition: transform 0.3s ease;
+            font-weight: 900;
+            z-index: 5;
+        }
+
+        .close-popup:hover {
+            transform: scale(1.2) rotate(90deg);
+        }
+
+        @media (max-width: 768px) {
+            .sana-sacred-parchment {
+                padding: 140px 20px 65px 20px;
+                flex-direction: column;
+                gap: 25px;
+                width: 95%;
+            }
+
+            .parchment-portrait-shrine {
+                width: 100%;
+                height: 260px;
+                margin: 0 auto;
+            }
+
+            .parchment-reg-header {
+                font-size: 13px;
+            }
+
+            .parchment-grid-row {
+                flex-direction: column;
+                gap: 4px;
+                margin-bottom: 14px;
+                padding-bottom: 8px;
+            }
+
+            .parchment-master-label {
+                width: 100%;
+                font-size: 12px;
+                color: #8b6508;
+            }
+
+            .parchment-master-val {
+                font-size: 14px;
+            }
+
+            .timeline-container::before {
+                left: 30px;
+            }
+
+            .crystal-node {
+                left: 30px;
+            }
+
+            .timeline-card {
+                width: 80%;
+                margin-left: 60px !important;
+            }
+
+            .timeline-item:nth-child(even) {
+                justify-content: flex-start;
+            }
+
+            .lang-compass {
+                top: 15px;
+                right: 15px;
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角古典懸浮多國語言切換羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <!-- 💡 將 <a> 換成 <div>，徹底避開 Swup 引擎的惡意攔截，原地無刷新切換！ -->
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="great-hall">
+
+            <h1 class="hall-title">THE GREAT HALL</h1>
+
+            <div class="parchment-sealed-trigger" id="parchment-trigger" onclick="unrollSacredParchment()">
+                <span>✨</span>
+                <div class="trigger-text">
+                    {% if current_lang == 'zh' %}✦ 解封大禮堂至高機密：湊崎紗夏個人檔案 (展開)
+                    {% elif current_lang == 'ja' %}✦ 最高機密解除：サナの公式魔導名簿を展開
+                    {% elif current_lang == 'ko' %}✦ 최고기밀 해제: 사나의 마법 등록부 전개 (클릭){% endif %}
+                </div>
+                <span>✨</span>
+            </div>
+
+            <div class="sana-sacred-parchment-wrapper" id="parchment-wrapper">
+                <div class="sana-sacred-parchment">
+
+                    <div class="parchment-portrait-shrine">
+                        <img src="/static/sana_empress.webp" class="parchment-portrait-img" alt="Sana Empress Portrait"
+                            onerror="this.parentElement.style.display='none';">
+                    </div>
+
+                    <div class="parchment-info-hall">
+                        <div class="parchment-reg-header">
+                            <span>✦ {{ profile.reg_title }} ✦</span>
+                            <span class="close-parchment-x" onclick="rollUpSacredParchment(event)">&times;</span>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ IDENTITY</div>
+                            <div class="parchment-master-val"
+                                style="color: #4a148c; font-weight: 900; font-size: 16px; letter-spacing: 0.5px;">{{
+                                profile.name }}
+                            </div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ ASTRAL BIRTH</div>
+                            <div class="parchment-master-val">{{ profile.birth }}</div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ SACRED ORIGIN</div>
+                            <div class="parchment-master-val">{{ profile.place }}</div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ BLOOD STATUS</div>
+                            <div class="parchment-master-val" style="color: #b91c1c;">{{ profile.blood }}</div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ MBTI ARCHETYPE</div>
+                            <div class="parchment-master-val" style="color: #6b21a8; font-weight: 900;">{{ profile.mbti
+                                }}</div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ REVERED ALIAS</div>
+                            <div class="parchment-master-val" style="color: #5c4033; font-weight: 800;">{{ profile.names
+                                }}</div>
+                        </div>
+
+                        <div class="parchment-grid-row">
+                            <div class="parchment-master-label">✦ WAND ESSENCE</div>
+                            <div class="parchment-master-val" style="color: #15803d; line-height: 1.9;">{{ profile.core
+                                }}</div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- 📥 5大超連結流體傳送門按鈕盒子 -->
+            <div class="portal-btn-box">
+                <a href="/charms" class="portal-link">
+                    {% if current_lang == 'zh' %}前往 ⚡ 符咒學教室 (音樂作品)
+                    {% elif current_lang == 'ja' %}⚡ 呪文学の教室へ (音楽作品)
+                    {% elif current_lang == 'ko' %}⚡ 마법 부적학 교실로 이동 (음악 작품){% endif %}
+                </a>
+
+                <a href="/media" class="portal-link"
+                    style="color: #9333ea; border-color: #9333ea; background: rgba(10,5,15,0.7);"
+                    onmouseover="this.style.boxShadow='0 0 15px #ffd700'; this.style.borderColor='#ffd700'"
+                    onmouseout="this.style.boxShadow='none'; this.style.borderColor='#9333ea'">
+                    {% if current_lang == 'zh' %}進入 🔮 儲思盆與巡演地圖
+                    {% elif current_lang == 'ja' %}🔮 憂いの篩とツアーマップへ
+                    {% elif current_lang == 'ko' %}🔮 펜시브와 월드 투어 지도로 진입{% endif %}
+                </a>
+
+                <a href="/room" class="portal-link"
+                    style="color: #ffd700; border-color: #c5a059; background: rgba(20,15,5,0.75);"
+                    onmouseover="this.style.boxShadow='0 0 15px #ffd700'; this.style.borderColor='#ffd700'"
+                    onmouseout="this.style.boxShadow='none'; this.style.borderColor='#c5a059'">
+                    {% if current_lang == 'zh' %}探索 ⚡ 萬應室 (冷知識)
+                    {% elif current_lang == 'ja' %}⚡ 必要の部屋を探索 (豆知識)
+                    {% elif current_lang == 'ko' %}⚡ 필요의 방 탐색 (비하인드) {% endif %}
+                </a>
+
+                <a href="/lounge" class="portal-link"
+                    style="color: #b91c1c; border-color: #b91c1c; background: rgba(20,5,5,0.8);"
+                    onmouseover="this.style.boxShadow='0 0 15px #ffd700'; this.style.borderColor='#ffd700'"
+                    onmouseout="this.style.boxShadow='none'; this.style.borderColor='#b91c1c'">
+                    {% if current_lang == 'zh' %}聚集 ✉️ 交誼廳佈告欄 (留言)
+                    {% elif current_lang == 'ja' %}✉️ 談話室の掲示板 (メッセージ)
+                    {% elif current_lang == 'ko' %}✉️ 공용실 게시판 (방명록) {% endif %}
+                </a>
+
+                <button class="portal-link" onclick="invokeGargoyle()"
+                    style="color: #ffd700; border: 1px solid #ffd700; background: rgba(0,0,0,0.85); cursor: pointer;"
+                    onmouseover="this.style.boxShadow='0 0 20px #ffd700'; this.style.background='#ffd700'; this.style.color='#000';"
+                    onmouseout="this.style.boxShadow='none'; this.style.background='rgba(0,0,0,0.85)'; this.style.color='#ffd700';">
+                    🔑 {% if current_lang == 'zh' %}紗夏的黃昏溫室 (專屬密室){% elif current_lang == 'ja' %}サナの秘密温室 (隠し部屋){% elif
+                    current_lang == 'ko' %}사나의 비밀 온실 (시크릿룸){% endif %}
+                </button>
+            </div>
+
+            <!-- 時光軸展台 -->
+            <div class="timeline-container">
+                {% for item in timeline %}
+                <div class="timeline-item">
+                    <!-- 💡 核心修復：精準呼叫原創 openPopup(...) 函數，讓內文與年份完美解凍！ -->
+                    <div class="crystal-node"
+                        onclick="openPopup('{{ item.year }}', '{{ item.title }}', '{{ item.event }}', '{{ item.achievement }}', '{{ item.image }}', '{{ item.position }}', '{{ item.fit_mode }}')">
+                    </div>
+
+                    <div class="timeline-card"
+                        onclick="openPopup('{{ item.year }}', '{{ item.title }}', '{{ item.event }}', '{{ item.achievement }}', '{{ item.image }}', '{{ item.position }}', '{{ item.fit_mode }}')">
+                        <div class="card-image-box">
+                            <img src="{{ item.image }}" class="card-image lazy-camera"
+                                style="width: 100%; height: 100%; object-fit: {{ item.fit_mode if item.fit_mode else 'cover' }}; object-position: {{ item.position if item.position else 'center' }};"
+                                data-pos="{{ item.position }}" data-fit="{{ item.fit_mode }}" alt="Sana Memory">
+                        </div>
+                        <div class="card-text-box">
+                            <div class="card-year">{{ item.year }} <span style="font-size: 13px; color:#c5a059;">{{
+                                    item.date }}</span></div>
+                            <div class="card-title">{{ item.title }}</div>
+                            <div class="card-preview">{{ item.event }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- 🔮 彈窗防禦層 -->
+        <div class="magic-popup" id="magic-popup">
+            <div class="popup-content">
+                <span class="close-popup" onclick="closePopup()">&times;</span>
+                <div class="popup-image-box">
+                    <img src="" id="popup-image" class="popup-image" alt="Sana Large Memory">
+                </div>
+                <div class="popup-year" id="popup-year"></div>
+                <div class="popup-title" id="popup-title"></div>
+                <div class="popup-event" id="popup-event"></div>
+                <div class="popup-achievement" id="popup-achievement"></div>
+            </div>
+        </div>
+
+        <!-- 🗿 石像鬼密室過濾層 -->
+        <div id="gargoyle-gate"
+            style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); z-index: 500; display: none; justify-content: center; align-items: center;">
+            <div
+                style="background-image: url('/static/paper.webp'); background-size: cover; width: 90%; max-width: 400px; padding: 35px; border-radius: 4px; box-shadow: 0 30px 60px rgba(0,0,0,0.9); text-align: center; color: #1a0f08; position: relative;">
+                <span onclick="document.getElementById('gargoyle-gate').style.display='none'"
+                    style="position: absolute; top: 10px; right: 15px; font-size: 28px; cursor: pointer; color: #4a148c; font-weight: 900;">&times;</span>
+                <h3
+                    style="font-family: 'Cinzel', serif; font-size: 20px; margin: 0 0 10px 0; color: #000; font-weight: 900;">
+                    GUARD OVERLAY</h3>
+                <p style="font-size: 13.5px; line-height: 1.6; font-weight: 800; margin-bottom: 25px; color: #3d2516;">
+                    {% if current_lang == 'zh' %}🗿 石像鬼在低語：「請出示只有你們知道的回家鑰匙…」
+                    {% elif current_lang == 'ja' %}🗿 ガーゴイルが囁く：「二人だけの帰宅の鍵を提示せよ…」
+                    {% elif current_lang == 'ko' %}🗿 가고일이 속삭입니다: "둘만의 비밀 열쇠를 입력하세요..."{% endif %}
+                </p>
+
+                <form action="/solace" method="POST">
+                    <input type="password" name="secret_key" required
+                        style="width: 100%; padding: 12px; border: 1px solid #8b7355; background: rgba(255,255,255,0.7); font-size: 16px; font-weight: 900; text-align: center; border-radius: 3px; outline: none; box-sizing: border-box; margin-bottom: 20px; color: #000;">
+                    <button type="submit"
+                        style="width: 100%; padding: 12px; background: #1c120c; color: #ffd700; border: none; font-family: 'Noto Serif TC', serif; font-size: 14px; font-weight: 900; border-radius: 3px; cursor: pointer; transition: all 0.3s;"
+                        onmouseover="this.style.background='#ffd700'; this.style.color='#000';"
+                        onmouseout="this.style.background='#1c120c'; this.style.color='#ffd700';">
+                        {% if current_lang == 'zh' %}✦ 解除防護罩 (進入)
+                        {% elif current_lang == 'ja' %}✦ 結界を解除 (進入)
+                        {% elif current_lang == 'ko' %}✦ 결계 해제 (진입){% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <script>
+            // 💡 1. 智慧防切臉座標重啟函數 (保持獨立)
+            function initCastleMagic() {
+                let cameraImages = document.querySelectorAll('.lazy-camera');
+                cameraImages.forEach(img => {
+                    let coord = img.getAttribute('data-pos');
+                    let fit = img.getAttribute('data-fit');
+                    if (coord) img.style.objectPosition = coord;
+                    if (fit) img.style.objectFit = fit;
+                });
+            }
+
+            // 進入房間當場發動一次
+            initCastleMagic();
+
+            // 🛡️ Swup 異步事件安全防禦鉤子：確保跨房傳送過來時，座標自動喚醒
+            if (window.swup && window.swup.hooks) {
+                window.swup.hooks.on('page:view', initCastleMagic);
+            }
+
+            // 💡 2. 📜 皇家聖卷展開控制 (徹底移出內層，滿血復活！)
+            function unrollSacredParchment() {
+                let trigger = document.getElementById('parchment-trigger');
+                let wrapper = document.getElementById('parchment-wrapper');
+                if (trigger && wrapper) {
+                    trigger.style.display = 'none';
+                    wrapper.classList.add('unrolled');
+                }
+            }
+
+            // 📜 皇家聖卷合起控制
+            function rollUpSacredParchment(event) {
+                if (event) event.stopPropagation();
+                let trigger = document.getElementById('parchment-trigger');
+                let wrapper = document.getElementById('parchment-wrapper');
+                if (wrapper && trigger) {
+                    wrapper.classList.remove('unrolled');
+                    setTimeout(() => { trigger.style.display = 'flex'; }, 100);
+                }
+            }
+
+            // ⏳ 歷史編年史解密彈窗
+            function openPopup(year, title, event, achievement, imageUrl, position, fitMode) {
+                document.getElementById('popup-year').innerText = year;
+                document.getElementById('popup-title').innerText = title;
+                document.getElementById('popup-event').innerText = event;
+
+                let currentLang = "{{ current_lang }}";
+                let prefix = "🔮 魔法部認證成就：";
+                if (currentLang === 'ja') prefix = "🔮 魔法省認定の功績：";
+                else if (currentLang === 'ko') prefix = "🔮 마법부 인증 업적: ";
+
+                document.getElementById('popup-achievement').innerText = prefix + achievement;
+
+                let popupImg = document.getElementById('popup-image');
+                popupImg.src = imageUrl;
+                popupImg.style.objectPosition = position;
+                popupImg.style.objectFit = fitMode;
+
+                document.getElementById('magic-popup').classList.add('active');
+            }
+
+            function closePopup() {
+                document.getElementById('magic-popup').classList.remove('active');
+            }
+
+            // 精準點擊控制：黑遮罩隔離防禦
+            window.onclick = function (event) {
+                let popup = document.getElementById('magic-popup');
+                let gate = document.getElementById('gargoyle-gate');
+
+                if (event.target == popup) popup.classList.remove('active');
+                if (event.target == gate) gate.style.display = 'none';
+            }
+
+            function invokeGargoyle() {
+                document.getElementById('gargoyle-gate').style.display = 'flex';
+            }
+
+            // 💡 3. 🌐 多國語言安全異步切換通道 (採用最高防禦標準)
+            function changeLangSecure(targetLang) {
+                // 將語系永久烙印在 Cookie 中
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+
+                // 檢查全域有沒有 Swup 母體大腦，並精準對齊 v4 的 .visit() 晶片
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    // 萬一單獨進房、Swup 還沒初始化，採用傳統的原地刷新安全墊底
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

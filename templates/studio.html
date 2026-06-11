@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Platinum Starlight - 頂級錄音室</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700&family=Noto+Serif+TC:wght@500;900&display=swap"
+        rel="stylesheet">
+
+    <!-- 🌐 僅在最外層引入 Swup.js 核心，其餘 100% 維持您原本的程式碼 -->
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #030303;
+            font-family: 'Montserrat', 'Noto Serif TC', serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🪐 1. 錄音室情境背景 (💡 檔名已完美對齊 .webp) */
+        .studio-container {
+            min-height: 100vh;
+            position: relative;
+            background-image: url('/static/studio_bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            box-sizing: border-box;
+            padding-bottom: 120px;
+        }
+
+        /* 🌐 2. 右上角白金多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .compass-current {
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 18px;
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 👑 3. 標題區 */
+        .studio-header {
+            text-align: center;
+            padding-top: 80px;
+            padding-bottom: 50px;
+        }
+
+        .studio-header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 12px;
+        }
+
+        .studio-header p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            color: #888888;
+            margin-top: 10px;
+        }
+
+        /* 🧭 4. 璀璨星光導覽軌道 */
+        .starlight-nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 80px;
+        }
+
+        .nav-item {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888888;
+            text-decoration: none;
+            letter-spacing: 3px;
+            padding: 10px 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 🎙️ 5. 瘋狂非對稱：高奢黑膠唱片展示牆 */
+        .vinyl-grid {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 60px 40px;
+        }
+
+        /* 💿 黑膠唱片機組件 */
+        .vinyl-player {
+            position: relative;
+            width: 100%;
+            height: 260px;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* 唱片封套 */
+        .vinyl-jacket {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 220px;
+            height: 220px;
+            background-color: #111;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: -10px 15px 30px rgba(0, 0, 0, 0.7);
+            z-index: 3;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+        }
+
+        .vinyl-jacket img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 🔮 核心特效：隱藏在封套內部的黑膠唱片本體 */
+        .vinyl-disk {
+            position: absolute;
+            left: 20px;
+            top: 10px;
+            width: 200px;
+            height: 200px;
+            background: radial-gradient(circle, #000 30%, #111 40%, #050505 50%, #222 70%, #000 100%);
+            border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border: 1px dashed rgba(255, 255, 255, 0.06);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        /* 黑膠唱片中央圓標（縮小版封面） */
+        .vinyl-center-label {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 2px solid #000;
+        }
+
+        .vinyl-center-label img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 🔥 滑鼠劃過：黑膠唱片一邊旋轉、一邊優雅向右滑出！ */
+        .vinyl-player:hover .vinyl-jacket {
+            transform: translateX(-15px) scale(1.02);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: -15px 25px 40px rgba(0, 0, 0, 0.8);
+        }
+
+        .vinyl-player:hover .vinyl-disk {
+            transform: translateX(105px) rotate(360deg);
+            box-shadow: 10px 15px 30px rgba(0, 0, 0, 0.6);
+        }
+
+        /* 右側專輯文字簡介 */
+        .vinyl-meta {
+            position: absolute;
+            left: 240px;
+            top: 0;
+            right: 0;
+            height: 220px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            opacity: 0.6;
+            transition: opacity 0.4s;
+            padding-left: 10px;
+        }
+
+        .vinyl-player:hover .vinyl-meta {
+            opacity: 1;
+        }
+
+        .vinyl-title {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            color: #fff;
+            margin-bottom: 5px;
+        }
+
+        .vinyl-album {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: #888;
+            letter-spacing: 1px;
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        .vinyl-year {
+            font-size: 11px;
+            font-family: 'Cinzel', serif;
+            color: rgba(255, 255, 255, 0.4);
+            margin-top: 5px;
+        }
+
+        /* 🔍 6. 錄音室大彈窗（作詞故事） */
+        .studio-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .studio-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(15, 15, 15, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 600px;
+            padding: 45px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+            border-radius: 2px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .studio-modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 24px;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-album-badge {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #888;
+            margin-bottom: 5px;
+            display: block;
+            font-family: 'Cinzel', serif;
+        }
+
+        .modal-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 25px;
+            font-family: 'Noto Serif TC', serif;
+            color: #ffffff;
+        }
+
+        /* 混音台指示器風格的分隔線 */
+        .audio-wave-line {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.3), transparent);
+            margin-bottom: 30px;
+        }
+
+        .modal-subtitle {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #aaaaaa;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+            text-align: left;
+        }
+
+        .modal-text {
+            font-size: 14.5px;
+            line-height: 2;
+            color: #dddddd;
+            text-align: justify;
+            font-weight: 300;
+            margin-bottom: 35px;
+        }
+
+        /* 📱 RWD 手機版安全機制 */
+        @media (max-width: 1100px) {
+            .vinyl-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .vinyl-grid {
+                grid-template-columns: repeat(1, 1fr);
+                gap: 30px;
+            }
+
+            .vinyl-player {
+                height: 220px;
+            }
+
+            .vinyl-meta {
+                left: 240px;
+            }
+
+            .starlight-nav {
+                flex-wrap: wrap;
+                gap: 15px 25px;
+                padding: 0 20px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角白金多國語言羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <!-- 💡 置換為 <div>，100% 繞開 Swup 劫持，原地秒切語系！ -->
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="studio-container">
+
+            <!-- 👑 2. 標題 -->
+            <div class="studio-header">
+                <a href="/starlight" style="text-decoration: none; color: inherit;">
+                    <h1 style="cursor: pointer;">SANA</h1>
+                </a>
+                <p>Premium Discography Master Tape</p>
+            </div>
+
+            <!-- 🧭 3. 現代星光導覽軌道 (全站異步無縫互通！) -->
+            <div class="starlight-nav">
+                <a href="/starlight" class="nav-item">{{ nav.starlight }}</a>
+                <a href="/dressing" class="nav-item">{{ nav.dressing }}</a>
+                <a href="/studio" class="nav-item active">{{ nav.studio }}</a>
+                <a href="/tour" class="nav-item">{{ nav.tour }}</a>
+                <a href="/bubble" class="nav-item">{{ nav.bubble }}</a>
+                <a href="/night_drive" class="nav-item">{{ nav.night_drive }}</a>
+            </div>
+
+            <!-- 💿 4. 完美動態：高奢黑膠唱片矩陣牆 -->
+            <div class="vinyl-grid">
+                {% for item in music_books %}
+                <div class="vinyl-player"
+                    onclick="openStudioModal('{{ item.title | escape }}', '{{ item.album | escape }}', '{{ item.type | escape }}', '{{ item.description | escape }}', '{{ item.magic_effect | escape }}')">
+
+                    <!-- 專輯封面封套 -->
+                    <div class="vinyl-jacket">
+                        <img src="{{ item.cover }}" alt="Album Cover">
+                    </div>
+
+                    <!-- 🔮 隱藏黑膠盤：滑鼠移入時旋轉滑出 -->
+                    <div class="vinyl-disk">
+                        <div class="vinyl-center-label">
+                            <img src="{{ item.cover }}" alt="Vinyl Label">
+                        </div>
+                    </div>
+
+                    <!-- 右側懸浮文字 -->
+                    <div class="vinyl-meta">
+                        <div class="vinyl-title">{{ item.title }}</div>
+                        <div class="vinyl-album">{{ item.album }}</div>
+                        <div class="vinyl-year">{{ item.year }}</div>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <!-- 🔍 5. 錄音室故事中央大彈窗 -->
+        <div class="studio-modal" id="studioModal" onclick="closeStudioModal(event)">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeStudioModal(event)">&times;</span>
+                <span class="modal-album-badge" id="modalAlbum"></span>
+                <div class="modal-title" id="modalTitle"></div>
+
+                <div class="audio-wave-line"></div>
+
+                <div class="modal-subtitle">✦ Music Concept & Type</div>
+                <div class="modal-text" id="modalTypeText" style="margin-bottom: 25px;"></div>
+
+                <div class="modal-subtitle">✦ Story & Writing Concept</div>
+                <div class="modal-text" id="modalStoryText"></div>
+            </div>
+        </div>
+
+        <script>
+            // 彈窗控制晶片
+            function openStudioModal(title, album, typeStr, desc, story) {
+                document.getElementById('modalTitle').innerText = title;
+                document.getElementById('modalAlbum').innerText = album + " (" + typeStr + ")";
+                document.getElementById('modalTypeText').innerText = desc;
+                document.getElementById('modalStoryText').innerText = story;
+
+                const modal = document.getElementById('studioModal');
+                if (modal) {
+                    modal.style.display = 'flex';
+                    setTimeout(() => modal.classList.add('active'), 10);
+                }
+            }
+
+            function closeStudioModal(e) {
+                if (e.target.id === 'studioModal' || e.target.className === 'modal-close' || e.target.innerHTML === '×') {
+                    const modal = document.getElementById('studioModal');
+                    if (modal) {
+                        modal.classList.remove('active');
+                        setTimeout(() => modal.style.display = 'none', 400);
+                    }
+                }
+            }
+
+            // 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 visit() 白金晶片)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

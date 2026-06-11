@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 萬應室</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #030303;
+            color: #f4e8d1;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 萬應室大場景背景 (💡 檔名已完美對齊 .webp) */
+        .room-scene {
+            position: relative;
+            min-height: 100vh;
+            background-image: url('/static/room_of_requirement.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+            padding-bottom: 100px;
+        }
+
+        /* ⚡ 背景神祕、但內容極致清晰剔透的萬應室大場景 */
+        .room-scene::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.1) 0%, rgba(3, 3, 3, 0.55) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 右上角多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 返回大廳鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        .room-title {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cinzel', serif;
+            font-size: 34px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            margin: 50px 0 10px 0;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .room-subtitle {
+            position: relative;
+            z-index: 2;
+            font-size: 13.5px;
+            color: #c5a059;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        /* ==================== 🏛️ 霍格華茲魔法道具陳列櫃不規則網格區 ==================== */
+        .showcase-grid {
+            position: relative;
+            z-index: 2;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-auto-rows: 280px;
+            gap: 25px;
+            max-width: 1150px;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 0 20px;
+        }
+
+        /* 每一座古典黑檀木燙金陳列櫃個體 */
+        .showcase-item {
+            position: relative;
+            border: 2px solid #2a1d13;
+            border-radius: 4px;
+            overflow: hidden;
+            background-color: #0d0907;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.8), inset 0 0 35px rgba(255, 215, 0, 0.15);
+            filter: brightness(1.1);
+            cursor: pointer;
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .item-wide {
+            grid-column: span 2;
+        }
+
+        .item-tall {
+            grid-row: span 2;
+        }
+
+        .showcase-item:hover {
+            transform: translateY(-6px) scale(1.015);
+            border-color: #ffd700;
+            box-shadow: 0 25px 50px rgba(255, 215, 0, 0.25), inset 0 0 40px rgba(255, 215, 0, 0.2);
+            filter: brightness(1.15);
+        }
+
+        .showcase-img-box {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            z-index: 2;
+            overflow: hidden;
+        }
+
+        .showcase-img {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.7s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .showcase-item:hover .showcase-img {
+            transform: scale(1.04) rotate(0.5deg);
+        }
+
+        /* 智慧毛玻璃文字浮現層 */
+        .showcase-text-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: linear-gradient(to top, rgba(12, 8, 5, 0.92) 0%, rgba(12, 8, 5, 0.65) 75%, transparent 100%);
+            padding: 30px 25px 25px 25px;
+            box-sizing: border-box;
+            z-index: 3;
+            transform: translateY(10px);
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .showcase-item:hover .showcase-text-overlay {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .item-name-tag {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            color: #ffd700;
+            font-weight: 900;
+            margin: 0 0 4px 0;
+            letter-spacing: 1.5px;
+            text-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .item-action-tip {
+            font-size: 11px;
+            color: #c5a059;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* ==================== ✉️ 終極古卷解密大彈窗 (💡 檔名已完美對齊 .webp) ==================== */
+        .room-popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .room-popup-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .room-popup-box {
+            background-image: url('/static/paper.webp');
+            background-size: cover;
+            background-position: center;
+            width: 90%;
+            max-width: 580px;
+            max-height: 85vh;
+            border-radius: 4px;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.9);
+            padding: 40px;
+            box-sizing: border-box;
+            position: relative;
+            color: #1a0f08;
+            overflow-y: auto;
+            scrollbar-width: none;
+            transform: scale(0.88) translateY(20px);
+            transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .room-popup-box::-webkit-scrollbar {
+            display: none;
+        }
+
+        .room-popup-overlay.active .room-popup-box {
+            transform: scale(1) translateY(0);
+        }
+
+        .popup-big-stage {
+            width: 100%;
+            height: 320px;
+            overflow: hidden;
+            border-radius: 3px;
+            margin-bottom: 22px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+            background-color: #120e0c;
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+
+        .popup-big-img {
+            width: 100%;
+            height: 100%;
+        }
+
+        .popup-item-title {
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid rgba(74, 20, 140, 0.18);
+            padding-bottom: 8px;
+            color: #4a148c;
+            letter-spacing: 0.5px;
+        }
+
+        .popup-item-fact {
+            font-size: 15px;
+            line-height: 2.1;
+            text-align: justify;
+            font-weight: 800;
+            text-indent: 30px;
+        }
+
+        .close-popup-x {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 30px;
+            cursor: pointer;
+            color: #4a148c;
+            font-weight: 900;
+            z-index: 5;
+            transition: transform 0.3s;
+        }
+
+        .close-popup-x:hover {
+            transform: scale(1.15) rotate(90deg);
+        }
+
+        @media (max-width: 900px) {
+            .showcase-grid {
+                grid-template-columns: 1fr;
+                grid-auto-rows: 240px;
+                gap: 20px;
+            }
+
+            .item-wide,
+            .item-tall {
+                grid-column: span 1;
+                grid-row: span 1;
+            }
+
+            .room-title {
+                font-size: 26px;
+                margin-top: 30px;
+            }
+
+            .showcase-text-overlay {
+                opacity: 1;
+                transform: translateY(0);
+                padding: 20px;
+                background: linear-gradient(to top, rgba(12, 8, 5, 0.95) 40%, rgba(12, 8, 5, 0.4) 100%);
+            }
+
+            .item-name-tag {
+                font-size: 14.5px;
+            }
+
+            .room-popup-box {
+                padding: 30px 20px;
+            }
+
+            .popup-big-stage {
+                height: 240px;
+            }
+
+            .lang-compass {
+                top: 15px;
+                right: 15px;
+                padding: 3px 8px;
+                font-size: 11px;
+                width: 120px;
+            }
+
+            .lang-dropdown {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <a href="/castle" class="back-btn">
+        {% if current_lang == 'zh' %}← 返回大禮堂
+        {% elif current_lang == 'ja' %}← 大広間へ戻る
+        {% elif current_lang == 'ko' %}← 대연회장으로 복귀{% endif %}
+    </a>
+
+    <main id="swup" class="transition-fade">
+        <div class="room-scene">
+
+            <h1 class="room-title">THE ROOM OF REQUIREMENT</h1>
+            <p class="room-subtitle">
+                {% if current_lang == 'zh' %}✦ 萬應室：有求必應的八大冷知識陳列櫃 ✦
+                {% elif current_lang == 'ja' %}✦ 必要の部屋：サナの８大裏話コレクション ✦
+                {% elif current_lang == 'ko' %}✦ 필요의 방: 사나의 8대 비하인드 비밀 보물창고 ✦{% endif %}
+            </p>
+
+            <div class="showcase-grid">
+                {% for item in room_items %}
+                <div class="showcase-item {% if item.id == 'item_perfume' or item.id == 'item_friends' %}item-wide{% elif item.id == 'item_scared' or item.id == 'item_hair' %}item-tall{% endif %}"
+                    data-name="{{ item.name }}" data-img="{{ item.image }}" data-pos="{{ item.style }}"
+                    data-fact="{{ item.fact }}" onclick="revealSecret(this)">
+
+                    <div class="showcase-img-box">
+                        <img src="{{ item.image }}" class="showcase-img lazy-camera" data-pos="{{ item.style }}"
+                            alt="Sana Collection">
+                    </div>
+
+                    <div class="showcase-text-overlay">
+                        <h3 class="item-name-tag">{{ item.name }}</h3>
+                        <span class="item-action-tip">✨ {% if current_lang == 'zh' %}解密秘聞{% elif current_lang == 'ja'
+                            %}秘密を解読{% elif current_lang == 'ko' %}비밀 해제{% endif %}</span>
+                    </div>
+
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <div class="room-popup-overlay" id="room-popup">
+            <div class="room-popup-box">
+                <span class="close-popup-x" onclick="closePopup()">&times;</span>
+
+                <div class="popup-big-stage">
+                    <img src="" id="popup-big-img" class="popup-big-img" alt="Sana Big Resolution Item">
+                </div>
+
+                <h2 class="popup-item-title" id="popup-item-name"></h2>
+                <div class="popup-item-fact" id="popup-item-fact"></div>
+            </div>
+        </div>
+
+        <script>
+            // 💡 3. 智慧防切臉座標重啟模組 (合圍優化生命週期)
+            function initRoomMagic() {
+                let cameraImages = document.querySelectorAll('.lazy-camera');
+                cameraImages.forEach(img => {
+                    let coord = img.getAttribute('data-pos');
+                    if (coord) {
+                        img.style.objectPosition = coord;
+                        img.style.objectFit = "cover";
+                    }
+                });
+            }
+
+            // 進入房間當場發動一次
+            initRoomMagic();
+
+            // 🛡️ Swup 專屬異步事件監聽鉤子：當異步換頁進房渲染完畢，強制再度重啟座標灌錄
+            if (window.swup && window.swup.hooks) {
+                window.swup.hooks.on('page:view', initRoomMagic);
+            }
+
+            let popup = document.getElementById('room-popup');
+            let pImg = document.getElementById('popup-big-img');
+            let pName = document.getElementById('popup-item-name');
+            let pFact = document.getElementById('popup-item-fact');
+
+            // 4. ⚡ 終極防切臉解密大彈窗
+            function revealSecret(element) {
+                let name = element.getAttribute('data-name');
+                let imgUrl = element.getAttribute('data-img');
+                let pos = element.getAttribute('data-pos');
+                let fact = element.getAttribute('data-fact');
+
+                pName.innerText = name;
+                pFact.innerText = fact;
+                pImg.src = imgUrl;
+
+                // 強制將 object-position 座標完美射入大彈窗舞台，拒絕切臉！
+                if (pos) {
+                    pImg.style.objectPosition = pos;
+                    pImg.style.objectFit = "cover";
+                } else {
+                    pImg.style.objectPosition = "50% 50%";
+                    pImg.style.objectFit = "cover";
+                }
+
+                popup.classList.add('active');
+            }
+
+            function closePopup() {
+                popup.classList.remove('active');
+            }
+
+            // 點擊黑遮罩安全隔離關閉
+            window.onclick = function (event) {
+                if (event.target == popup) {
+                    closePopup();
+                }
+            }
+
+            // 💡 5. 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 .visit() 最新標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 霍格華茲入學通知書</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+    <script src="https://unpkg.com/@swup/head-plugin@2"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #050505;
+            overflow: hidden;
+        }
+
+        /* 🪐 這是唯一新增的 Swup 全局淡入淡出時空結界，完全與您原本的樣式獨立，絕不干涉 */
+        .transition-fade {
+            transition: opacity 0.4s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 1. 魔法書桌背景 */
+        .desk {
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            background-image: url('/static/desk.webp');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* 🌐 右上角隨信連動多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 2. 信件整體立體容器 */
+        .envelope-wrapper {
+            position: relative;
+            width: 450px;
+            height: 300px;
+            background-image: url('/static/envelope.webp');
+            background-size: cover;
+            background-position: center;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7);
+            cursor: pointer;
+            transition: transform 0.3s ease;
+            z-index: 2;
+        }
+
+        .envelope-wrapper:hover {
+            transform: scale(1.03);
+        }
+
+        /* 3. 封蠟章火漆印 */
+        .seal-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -40%);
+            width: 100px;
+            height: 100px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: all 0.5s ease;
+        }
+
+        .seal-img {
+            width: 100%;
+            height: 100%;
+            background-image: url('/static/seal.webp');
+            background-size: cover;
+            filter: drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5));
+        }
+
+        .seal-purple-overlay {
+            position: absolute;
+            width: 90px;
+            height: 90px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(147, 51, 234, 0.45) 0%, rgba(74, 20, 140, 0.85) 100%);
+            mix-blend-mode: color-burn;
+            pointer-events: none;
+        }
+
+        .seal-text {
+            position: absolute;
+            font-family: 'Cinzel', serif;
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+            transform: translateY(-2px);
+        }
+
+        /* 4. 開封動態 */
+        .envelope-wrapper.open {
+            box-shadow: none;
+            cursor: default;
+        }
+
+        .envelope-wrapper.open .seal-container {
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, -40%) scale(0.5);
+        }
+
+        /* 5. 羊皮紙信件本體 */
+        .letter {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            bottom: 0;
+            transform: translate(-50%, 0) scale(0.9);
+            width: 540px;
+            height: 0;
+            background-image: url('/static/paper.webp');
+            background-size: cover;
+            background-position: center;
+            border-radius: 4px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.8);
+            opacity: 0;
+            overflow: hidden;
+            transition: all 0.9s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 1;
+        }
+
+        .envelope-wrapper.open .letter {
+            height: 660px;
+            transform: translate(-50%, -50%) scale(1);
+            opacity: 1;
+            z-index: 4;
+        }
+
+        .letter-scroll-wrapper {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+            padding: 40px 45px;
+        }
+
+        .letter-content {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .hogwarts-header {
+            font-family: 'Cinzel', serif;
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            color: #1a0f08;
+            letter-spacing: 1px;
+            margin-bottom: 3px;
+        }
+
+        .hogwarts-sub {
+            font-family: 'Cinzel', serif;
+            font-size: 9px;
+            font-weight: 600;
+            text-align: center;
+            color: #5c4033;
+            letter-spacing: 0.5px;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(92, 64, 51, 0.25);
+            padding-bottom: 15px;
+        }
+
+        .letter-text {
+            font-size: 14.5px;
+            line-height: 2.1;
+            color: #1a0f08;
+            font-weight: 800;
+            text-align: justify;
+        }
+
+        .salutation {
+            display: block;
+            font-size: 16px;
+            font-weight: 900;
+            color: #4a148c;
+            margin-bottom: 15px;
+        }
+
+        .letter-text p {
+            margin: 0 0 15px 0;
+            text-indent: 28px;
+        }
+
+        .signature {
+            font-size: 14.5px;
+            font-weight: 800;
+            text-align: right;
+            color: #3d2516;
+            margin-top: 20px;
+            line-height: 1.8;
+        }
+
+        /* ==================== 💎 雙生宇宙控制區 ==================== */
+        .destiny-btn-container {
+            display: flex !important;
+            flex-direction: row !important;
+            justify-content: center !important;
+            gap: 15px !important;
+            margin-top: auto !important;
+            padding-top: 25px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+
+        .magic-btn {
+            background-color: #1a0f08 !important;
+            color: #ffd700 !important;
+            border: 1px solid #c5a059 !important;
+            padding: 11px 10px !important;
+            font-family: 'Cinzel', serif !important;
+            font-size: 11px !important;
+            font-weight: 800 !important;
+            text-decoration: none !important;
+            border-radius: 4px !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.3s !important;
+            width: 48% !important;
+            text-align: center !important;
+            box-sizing: border-box;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .magic-btn:hover {
+            background-color: #ffd700 !important;
+            color: #000 !important;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.4) !important;
+        }
+
+        .reality-btn {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%) !important;
+            color: #1a1a1a !important;
+            border: 1px solid #ffffff !important;
+            padding: 11px 10px !important;
+            font-family: 'Noto Serif TC', serif !important;
+            font-size: 11px !important;
+            font-weight: 900 !important;
+            text-decoration: none !important;
+            border-radius: 4px !important;
+            letter-spacing: 0.5px !important;
+            transition: all 0.4s ease !important;
+            width: 48% !important;
+            text-align: center !important;
+            box-sizing: border-box;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1) !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        .reality-btn:hover {
+            background: linear-gradient(135deg, #ffffff 0%, #e0eafc 100%) !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 8px 18px rgba(255, 255, 255, 0.7) !important;
+        }
+
+        @media (max-width: 580px) {
+            .letter {
+                width: 92%;
+            }
+
+            .envelope-wrapper.open .letter {
+                height: 680px;
+                transform: translate(-50%, -10px) scale(1);
+            }
+
+            .letter-scroll-wrapper {
+                padding: 25px 20px;
+            }
+
+            .destiny-btn-container {
+                flex-direction: column !important;
+                gap: 8px !important;
+                margin-top: 15px !important;
+            }
+
+            .magic-btn,
+            .reality-btn {
+                width: 100% !important;
+                font-size: 11.5px !important;
+                padding: 12px 5px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <main id="swup" class="transition-fade">
+        <div class="desk">
+            <div class="envelope-wrapper" id="magic-envelope" onclick="openLetter()">
+
+                <div class="envelope">
+                    <div class="seal-container">
+                        <div class="seal-img"></div>
+                        <div class="seal-purple-overlay"></div>
+                        <div class="seal-text">Savely</div>
+                    </div>
+                </div>
+
+                <div class="letter">
+                    <div class="letter-scroll-wrapper">
+                        <div class="letter-content">
+                            <div class="hogwarts-header">{{ letter.header }}</div>
+                            <div class="hogwarts-sub">{{ letter.sub_header }}</div>
+
+                            <div class="letter-text">
+                                <span class="salutation">{{ letter.salutation }}</span>
+                                <p>{{ letter.p1 }}</p>
+                                <p>{{ letter.p2 }}</p>
+                                <p>{{ letter.p3 }}</p>
+                            </div>
+
+                            <div class="signature">
+                                {{ letter.signature | safe }}
+                            </div>
+
+                            <div class="destiny-btn-container">
+                                <a href="/castle" class="magic-btn">{{ letter.btn_magic }}</a>
+                                <a href="/starlight" class="reality-btn">{{ letter.btn_reality }}</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function openLetter() {
+            document.getElementById('magic-envelope').classList.add('open');
+        }
+
+        // 💡 2. 採用最高防禦規範：焊上 Swup v4 標準的 .visit() 晶片
+        function changeLangSecure(targetLang) {
+            document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+            if (window.swup && typeof window.swup.visit === 'function') {
+                window.swup.visit(window.location.pathname);
+            } else {
+                window.location.reload();
+            }
+        }
+
+        // 🪐 3. 初始化全站全域大腦 Swup，並掛載頭部同步防護盾
+        const swup = new Swup({
+            animationSelector: '[class*="transition-"]',
+            containers: ['#swup'],
+            plugins: [new SwupHeadPlugin()] // 🔒 關鍵：當跨越 A 與 B 宇宙時，強制同步刷新頭部 CSS 字體路徑！
+        });
+        window.swup = swup;
+    </script>
+</body>
+
+</html>

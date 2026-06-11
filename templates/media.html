@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 儲思盆與魔法地圖</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        /* 🏰 壹、電腦大螢幕絕對核心防禦樣式（100% 靜止滿版、滑鼠絕對精準） */
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #030303;
+            color: #f4e8d1;
+            overflow: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 右上角多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            width: 135px;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 返回大廳按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 105;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        /* 雙界完美 50% 滿版大對開容器 */
+        .split-world {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 左半世界：儲思盆影音區 (💡 已優化對齊 .webp) */
+        .world-pensieve {
+            width: 50%;
+            height: 100%;
+            background-image: url('/static/pensieve_scene.webp');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            padding: 40px;
+            z-index: 2;
+        }
+
+        .world-pensieve::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.7));
+            pointer-events: none;
+        }
+
+        .pensieve-title {
+            position: absolute;
+            top: 80px;
+            font-family: 'Cinzel', serif;
+            font-size: 24px;
+            color: #9333ea;
+            text-shadow: 0 0 15px rgba(147, 51, 234, 0.6);
+            letter-spacing: 2px;
+            font-weight: 900;
+            z-index: 3;
+        }
+
+        /* 🔮 記憶水泡聚合星陣核心 */
+        .bubble-grid {
+            position: relative;
+            z-index: 5;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 20px 25px;
+            max-width: 320px;
+            margin: 60px auto 0 auto;
+        }
+
+        .memory-bubble {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.4), rgba(147, 51, 234, 0.1) 60%, rgba(30, 144, 255, 0.3));
+            box-shadow: 0 0 15px rgba(135, 206, 250, 0.4), inset 0 0 10px rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 12px;
+            box-sizing: border-box;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .memory-bubble:hover {
+            transform: scale(1.15) translateY(-10px);
+            box-shadow: 0 0 30px rgba(147, 51, 234, 0.8);
+        }
+
+        .bubble-text {
+            font-size: 11.5px;
+            color: #ffffff;
+            font-weight: 900;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            pointer-events: none;
+        }
+
+        /* 右半世界：地圖與古卷二合一縱向盒 */
+        .world-map-zone {
+            width: 50%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: -10px 0 30px rgba(0, 0, 0, 0.8);
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 🗺️ 地圖上半段 (💡 已優化對齊 .webp) */
+        .map-canvas {
+            width: 100%;
+            height: 50%;
+            background-image: url('/static/magic_map.webp');
+            background-size: cover;
+            background-position: center;
+            position: relative;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+            box-sizing: border-box;
+        }
+
+        .map-title {
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            font-family: 'Cinzel', serif;
+            font-size: 22px;
+            color: #854d0e;
+            font-weight: 900;
+            z-index: 3;
+        }
+
+        .map-node {
+            position: absolute;
+            width: 16px;
+            height: 16px;
+            background: radial-gradient(circle, #ff0000, #990000);
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 5;
+            box-shadow: 0 0 8px #ff0000;
+            transition: transform 0.3s ease;
+        }
+
+        .map-node::after {
+            content: '';
+            position: absolute;
+            top: -12px;
+            left: -12px;
+            width: 36px;
+            height: 36px;
+            border: 2px solid rgba(255, 0, 0, 0.5);
+            border-radius: 50%;
+            animation: ripple 2s infinite ease-out;
+            pointer-events: none;
+        }
+
+        .map-node:hover {
+            transform: scale(1.3);
+            background: #ff4500;
+            filter: drop-shadow(0 0 12px #ff4500);
+        }
+
+        @keyframes ripple {
+            0% {
+                transform: scale(0.3);
+                opacity: 1;
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* 📜 古卷下半段 */
+        .archive-scroll-panel {
+            width: 100%;
+            height: 50%;
+            background: rgba(12, 8, 5, 0.94);
+            box-sizing: border-box;
+            padding: 25px 30px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            scrollbar-width: none;
+        }
+
+        .archive-scroll-panel::-webkit-scrollbar {
+            display: none;
+        }
+
+        .cat-section-title {
+            font-family: 'Cinzel', serif;
+            font-size: 14px;
+            color: #ffd700;
+            letter-spacing: 2px;
+            font-weight: 900;
+            border-left: 3px solid #6b21a8;
+            padding-left: 10px;
+            margin: 5px 0;
+        }
+
+        .tour-row-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(197, 160, 89, 0.15);
+            border-radius: 3px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tour-row-card:hover {
+            background: rgba(107, 33, 168, 0.15);
+            border-color: #ffd700;
+            transform: translateX(4px);
+        }
+
+        .tour-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            pointer-events: none;
+        }
+
+        .tour-year {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: #c5a059;
+            font-weight: 700;
+            background: rgba(197, 160, 89, 0.1);
+            padding: 2px 8px;
+            border-radius: 2px;
+        }
+
+        .tour-name {
+            font-size: 14.5px;
+            color: #ffffff;
+            font-weight: 900;
+            letter-spacing: 0.5px;
+        }
+
+        .tour-action-tip {
+            font-size: 11px;
+            color: #ffd700;
+            font-weight: 800;
+            opacity: 0.6;
+            pointer-events: none;
+        }
+
+        .tour-row-card:hover .tour-action-tip {
+            opacity: 1;
+        }
+
+        /* ✉️ 通用羊皮紙解密彈窗 (💡 已優化對齊 .webp) */
+        .popup-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .popup-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .popup-box {
+            background-image: url('/static/paper.webp');
+            background-size: cover;
+            background-position: center;
+            width: 90%;
+            max-width: 620px;
+            max-height: 85vh;
+            border-radius: 4px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
+            padding: 35px;
+            box-sizing: border-box;
+            position: relative;
+            color: #1a0f08;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .popup-box::-webkit-scrollbar {
+            display: none;
+        }
+
+        .video-stage {
+            width: 100%;
+            height: 340px;
+            background: #000;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            display: none;
+        }
+
+        .video-stage iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .popup-image-box {
+            width: 100%;
+            height: 260px;
+            overflow: hidden;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+            background: #111;
+            display: none;
+        }
+
+        .popup-image {
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: cover;
+        }
+
+        .popup-title-text {
+            font-size: 20px;
+            font-weight: 900;
+            margin: 0 0 15px 0;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.15);
+            padding-bottom: 8px;
+            color: #000;
+        }
+
+        .popup-desc-text {
+            font-size: 15px;
+            line-height: 2;
+            text-align: justify;
+            font-weight: 800;
+            text-indent: 28px;
+        }
+
+        .close-popup {
+            position: absolute;
+            top: 12px;
+            right: 18px;
+            font-size: 32px;
+            cursor: pointer;
+            color: #4a148c;
+            font-weight: 900;
+            z-index: 5;
+        }
+
+        .magic-redirect-btn {
+            display: inline-block;
+            padding: 10px 22px;
+            background: #9333ea;
+            color: #ffffff;
+            text-decoration: none;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 13px;
+            font-weight: 900;
+            border-radius: 3px;
+            border: 1px solid #ffd700;
+            box-shadow: 0 0 12px rgba(147, 51, 234, 0.6);
+            transition: all 0.3s ease;
+        }
+
+        .magic-redirect-btn:hover {
+            background: #ffd700;
+            color: #000000;
+            box-shadow: 0 0 18px #ffd700;
+        }
+
+        /* 📱 貳、手機版移動端獨立對決空間 */
+        @media (max-width: 900px) {
+
+            body,
+            html {
+                overflow-y: auto !important;
+                height: auto !important;
+            }
+
+            .split-world {
+                flex-direction: column !important;
+                height: auto !important;
+                width: 100vw;
+            }
+
+            .world-pensieve {
+                width: 100% !important;
+                height: auto !important;
+                min-height: 42vh !important;
+                padding: 75px 20px 30px 20px !important;
+            }
+
+            .bubble-grid {
+                margin: 45px auto 10px auto !important;
+            }
+
+            .world-map-zone {
+                width: 100% !important;
+                height: auto !important;
+                box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.9) !important;
+            }
+
+            .map-canvas {
+                height: 240px !important;
+                background-position: 48% center !important;
+            }
+
+            .map-title {
+                top: 20px !important;
+                left: 20px !important;
+                font-size: 18px !important;
+            }
+
+            .archive-scroll-panel {
+                height: auto !important;
+                max-height: none !important;
+                padding: 25px 15px !important;
+                background: #090604 !important;
+            }
+
+            .tour-row-card {
+                padding: 12px 14px !important;
+                gap: 8px !important;
+            }
+
+            .tour-name {
+                font-size: 13px !important;
+                line-height: 1.3 !important;
+            }
+
+            .tour-year {
+                font-size: 11px !important;
+                padding: 1px 5px !important;
+            }
+
+            .tour-action-tip {
+                display: none !important;
+            }
+
+            .lang-compass {
+                top: 15px !important;
+                right: 15px !important;
+                padding: 3px 8px !important;
+                font-size: 11px !important;
+                width: 120px !important;
+            }
+
+            .lang-dropdown {
+                width: 120px !important;
+            }
+
+            .popup-image-box {
+                height: 180px !important;
+                margin-bottom: 15px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <a href="/castle" class="back-btn">
+        {% if current_lang == 'zh' %}← 返回大禮堂
+        {% elif current_lang == 'ja' %}← 大広間へ戻る
+        {% elif current_lang == 'ko' %}← 대연회장으로 복귀{% endif %}
+    </a>
+
+    <main id="swup" class="transition-fade">
+        <div class="split-world">
+
+            <div class="world-pensieve">
+                <div class="pensieve-title">THE PENSIEVE</div>
+                <div class="bubble-grid">
+                    {% for video in media_data.videos %}
+                    <div class="memory-bubble" data-title="{{ video.title }}" data-yt="{{ video.youtube_id }}"
+                        data-desc="{{ video.description }}" onclick="openPensieve(this)">
+                        <div class="bubble-text">{{ video.title }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="world-map-zone">
+
+                <div class="map-canvas">
+                    <div class="map-title">WORLD TOUR MAP</div>
+                    {% for concert in media_data.concerts %}
+                    <div class="map-node" style="top: {{ concert.coords.top }}; left: {{ concert.coords.left }};"
+                        data-name="{{ concert.name }}" data-detail="{{ concert.detail }}"
+                        onclick="openGenericPopup(this.getAttribute('data-name'), this.getAttribute('data-detail'), '')">
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <div class="archive-scroll-panel">
+                    <div class="cat-section-title">WORLD TOURS (世界巡迴)</div>
+                    {% for tour in media_data.history_tours.world %}
+                    <div class="tour-row-card" data-title="{{ tour.year }} • {{ tour.title }}"
+                        data-detail="{{ tour.detail }}" data-image="{{ tour.image }}" onclick="revealTourSecret(this)">
+                        <div class="tour-meta">
+                            <span class="tour-year">{{ tour.year }}</span>
+                            <span class="tour-name">{{ tour.title }}</span>
+                        </div>
+                        <span class="tour-action-tip">🔮 {% if current_lang == 'zh' %}查看解密{% elif current_lang == 'ja'
+                            %}解読する{% elif current_lang == 'ko' %}기록 해제{% endif %}</span>
+                    </div>
+                    {% endfor %}
+
+                    <div class="cat-section-title" style="margin-top: 15px;">PHYSICAL TOURS (實體/日本巡演)</div>
+                    {% for tour in media_data.history_tours.physical %}
+                    <div class="tour-row-card" data-title="{{ tour.year }} • {{ tour.title }}"
+                        data-detail="{{ tour.detail }}" data-image="{{ tour.image }}" onclick="revealTourSecret(this)">
+                        <div class="tour-meta">
+                            <span class="tour-year">{{ tour.year }}</span>
+                            <span class="tour-name">{{ tour.title }}</span>
+                        </div>
+                        <span class="tour-action-tip">🔮 {% if current_lang == 'zh' %}查看解密{% elif current_lang == 'ja'
+                            %}解読する{% elif current_lang == 'ko' %}기록 해제{% endif %}</span>
+                    </div>
+                    {% endfor %}
+
+                    <div class="cat-section-title" style="margin-top: 15px;">ONLINE CONCERTS (線上虛擬盛宴)</div>
+                    {% for tour in media_data.history_tours.online %}
+                    <div class="tour-row-card" data-title="{{ tour.year }} • {{ tour.title }}"
+                        data-detail="{{ tour.detail }}" data-image="{{ tour.image }}" onclick="revealTourSecret(this)">
+                        <div class="tour-meta">
+                            <span class="tour-year">{{ tour.year }}</span>
+                            <span class="tour-name">{{ tour.title }}</span>
+                        </div>
+                        <span class="tour-action-tip">🔮 {% if current_lang == 'zh' %}查看解密{% elif current_lang == 'ja'
+                            %}解読する{% elif current_lang == 'ko' %}기록 해제{% endif %}</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="popup-overlay" id="popup-overlay">
+            <div class="popup-box">
+                <span class="close-popup" onclick="closePopup()">&times;</span>
+
+                <div class="video-stage" id="video-stage">
+                    <iframe id="popup-iframe" src=""
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowfullscreen></iframe>
+                </div>
+
+                <div class="popup-image-box" id="popup-image-box">
+                    <img src="" id="popup-live-img" class="popup-image" alt="Concert Live Shot">
+                </div>
+
+                <h2 class="popup-title-text" id="popup-title-text"></h2>
+
+                <div id="btn-container-zone" style="margin-bottom: 20px; display: none;">
+                    <a id="popup-youtube-link" href="" target="_blank" class="magic-redirect-btn">
+                        ↗ {% if current_lang == 'zh' %}點擊直接前往 YouTube 觀看原始影片{% elif current_lang == 'ja'
+                        %}YouTubeで元動画を直接視聴する{% elif current_lang == 'ko' %}YouTube에서 원본 영상 직접 시청하기{% endif %}
+                    </a>
+                </div>
+
+                <div class="popup-desc-text" id="popup-desc-text"></div>
+            </div>
+        </div>
+
+        <script>
+            let overlay = document.getElementById('popup-overlay');
+            let stage = document.getElementById('video-stage');
+            let iframe = document.getElementById('popup-iframe');
+            let imgBox = document.getElementById('popup-image-box');
+            let liveImg = document.getElementById('popup-live-img');
+            let titleText = document.getElementById('popup-title-text');
+            let descText = document.getElementById('popup-desc-text');
+            let btnZone = document.getElementById('btn-container-zone');
+            let linkBtn = document.getElementById('popup-youtube-link');
+
+            function openPensieve(element) {
+                let title = element.getAttribute('data-title');
+                let ytId = element.getAttribute('data-yt');
+                let desc = element.getAttribute('data-desc');
+
+                titleText.innerText = title;
+                descText.innerText = desc;
+
+                iframe.src = "https://www.youtube.com/embed/" + ytId;
+                stage.style.display = "block";
+                imgBox.style.display = "none";
+                linkBtn.href = "https://www.youtube.com/watch?v=" + ytId;
+                btnZone.style.display = "block";
+
+                overlay.classList.add('active');
+            }
+
+            function revealTourSecret(element) {
+                let title = element.getAttribute('data-title');
+                let detail = element.getAttribute('data-detail');
+                let imageUrl = element.getAttribute('data-image');
+
+                titleText.innerText = title;
+                descText.innerText = detail;
+
+                iframe.src = "";
+                stage.style.display = "none";
+                btnZone.style.display = "none";
+
+                if (imageUrl && imageUrl !== "" && imageUrl !== "None" && imageUrl !== "undefined") {
+                    liveImg.src = imageUrl;
+                    imgBox.style.display = "block";
+                } else {
+                    liveImg.src = "";
+                    imgBox.style.display = "none";
+                }
+
+                overlay.classList.add('active');
+            }
+
+            function openGenericPopup(title, detail, imageUrl) {
+                titleText.innerText = title;
+                descText.innerText = detail;
+                iframe.src = "";
+                stage.style.display = "none";
+                btnZone.style.display = "none";
+                imgBox.style.display = "none";
+                overlay.classList.add('active');
+            }
+
+            function closePopup() {
+                overlay.classList.remove('active');
+                iframe.src = "";
+            }
+
+            window.onclick = function (event) {
+                if (event.target == overlay) {
+                    closePopup();
+                }
+            }
+
+            // 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

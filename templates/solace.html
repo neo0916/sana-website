@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 紗夏的黃昏溫室</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <!-- 🌐 僅在最外層引入 Swup.js 核心，其餘 100% 維持您原本的程式碼 -->
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #0c0a08;
+            color: #f4e8d1;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🏡 核心提亮：夕陽西下、篝火搖曳的溫潤黃昏溫室大場景 (💡 已優化對齊 .webp) */
+        .solace-scene {
+            position: relative;
+            min-height: 100vh;
+            background-image: url('/static/sana_solace.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-sizing: border-box;
+            padding: 80px 20px 100px 20px;
+            overflow-x: hidden;
+        }
+
+        .solace-scene::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0.2) 0%, rgba(12, 8, 5, 0.55) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 右上角多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 返回大廳鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        .solace-title {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cinzel', serif;
+            font-size: 34px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            margin: 40px 0 10px 0;
+            letter-spacing: 4px;
+            text-align: center;
+        }
+
+        .solace-subtitle {
+            position: relative;
+            z-index: 2;
+            font-size: 13.5px;
+            color: #c5a059;
+            font-weight: 800;
+            letter-spacing: 2px;
+            text-align: center;
+            margin-bottom: 50px;
+            text-transform: uppercase;
+        }
+
+        /* ==================== 📜 全新古典暗金花邊牛皮紙長卷長信 (💡 已優化對齊 .webp) ==================== */
+        .letter-container {
+            background-image: url('/static/paper.webp');
+            background-size: cover;
+            background-position: center;
+            border: 2px solid #8b6508;
+            outline: 1px solid #ffd700;
+            border-radius: 4px;
+            padding: 50px 60px;
+            max-width: 820px;
+            width: 100%;
+            box-sizing: border-box;
+            box-shadow: 0 35px 80px rgba(0, 0, 0, 0.95);
+            filter: brightness(1.12);
+            color: #1a0f08;
+            position: relative;
+            z-index: 2;
+            margin-bottom: 60px;
+        }
+
+        .letter-container::before {
+            content: '';
+            position: absolute;
+            top: 15px;
+            bottom: 15px;
+            left: 15px;
+            right: 15px;
+            border: 1px solid rgba(139, 101, 8, 0.2);
+            pointer-events: none;
+        }
+
+        .letter-salutation {
+            font-size: 19px;
+            font-weight: 900;
+            color: #4a148c;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        .letter-body {
+            font-size: 16px;
+            line-height: 2.2;
+            text-align: justify;
+            font-weight: 800;
+            text-indent: 32px;
+            white-space: pre-line;
+        }
+
+        .letter-signature {
+            font-family: 'Cinzel', serif;
+            font-size: 17px;
+            font-weight: 900;
+            text-align: right;
+            margin-top: 35px;
+            color: #5c4033;
+            border-top: 1px dashed rgba(92, 64, 51, 0.2);
+            padding-top: 15px;
+        }
+
+        /* ==================== 🏺 秘密共鳴留聲石 ==================== */
+        .resonance-shrine {
+            max-width: 820px;
+            width: 100%;
+            position: relative;
+            z-index: 2;
+            background: rgba(18, 12, 8, 0.72);
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            border-radius: 4px;
+            padding: 40px;
+            box-sizing: border-box;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .shrine-title {
+            font-family: 'Cinzel', serif;
+            font-size: 18px;
+            color: #ffd700;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 0 0 30px 0;
+            border-bottom: 1px solid rgba(197, 160, 89, 0.3);
+            padding-bottom: 10px;
+            text-align: center;
+        }
+
+        .quill-console-box {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            margin-bottom: 40px;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 25px;
+            border-radius: 3px;
+            border: 1px solid rgba(197, 160, 89, 0.15);
+        }
+
+        .console-label {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: #c5a059;
+            font-weight: 900;
+            letter-spacing: 1px;
+        }
+
+        .quill-input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            background: rgba(5, 3, 2, 0.6);
+            color: #f4e8d1;
+            font-size: 14.5px;
+            font-weight: 700;
+            border-radius: 3px;
+            outline: none;
+            box-sizing: border-box;
+            font-family: 'Noto Serif TC', serif;
+            transition: all 0.3s;
+        }
+
+        .quill-input-field:focus {
+            border-color: #ffd700;
+            background: rgba(5, 3, 2, 0.85);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+        }
+
+        .drop-message-btn {
+            padding: 13px;
+            background: #1c120c;
+            color: #ffd700;
+            border: 1px solid #c5a059;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 14.5px;
+            font-weight: 900;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .drop-message-btn:hover {
+            background: #ffd700;
+            color: #000;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #ffd700;
+        }
+
+        .private-chat-stream {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            max-height: 600px;
+            overflow-y: auto;
+            padding-right: 8px;
+            scrollbar-width: none;
+        }
+
+        .private-chat-stream::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chat-bubble-card {
+            max-width: 75%;
+            padding: 20px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .chat-bubble-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .alliance-wizard {
+            align-self: flex-start;
+            background: rgba(30, 22, 15, 0.85);
+            border: 1px solid rgba(197, 160, 89, 0.4);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .alliance-wizard .chat-meta-name {
+            color: #ffd700;
+            font-family: 'Cinzel', serif;
+        }
+
+        .alliance-sana {
+            align-self: flex-end;
+            background: rgba(48, 25, 74, 0.88);
+            border: 1px solid #9333ea;
+            box-shadow: 0 0 20px rgba(147, 51, 234, 0.45), inset 0 0 15px rgba(147, 51, 234, 0.2);
+        }
+
+        .alliance-sana .chat-meta-name {
+            color: #e9d5ff;
+            font-weight: 900;
+        }
+
+        .alliance-sana .chat-meta-name::after {
+            content: ' ✦ 👑';
+            font-size: 11px;
+            color: #ffd700;
+        }
+
+        .chat-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: rgba(244, 232, 209, 0.5);
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+
+        .chat-meta-name {
+            font-size: 13px;
+            font-weight: 900;
+        }
+
+        .chat-main-text {
+            font-size: 14.5px;
+            line-height: 1.6;
+            font-weight: 700;
+            text-align: justify;
+            color: #f4e8d1;
+            white-space: pre-wrap;
+        }
+
+        @media (max-width: 768px) {
+            .solace-scene {
+                padding: 60px 12px 40px 12px;
+            }
+
+            .solace-title {
+                font-size: 24px;
+                margin-top: 30px;
+            }
+
+            .letter-container {
+                padding: 35px 22px;
+                width: 100%;
+                margin-bottom: 40px;
+            }
+
+            .letter-salutation {
+                font-size: 17px;
+            }
+
+            .letter-body {
+                font-size: 14.5px;
+                line-height: 2;
+            }
+
+            .resonance-shrine {
+                padding: 25px 15px;
+                width: 100%;
+            }
+
+            .quill-console-box {
+                padding: 15px;
+            }
+
+            .chat-bubble-card {
+                max-width: 90%;
+                padding: 16px;
+            }
+
+            .chat-main-text {
+                font-size: 13.5px;
+            }
+
+            .lang-compass {
+                top: 15px;
+                right: 15px;
+                padding: 3px 8px;
+                font-size: 11px;
+                width: 120px;
+            }
+
+            .lang-dropdown {
+                width: 120px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角多國語言切換羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <!-- 💡 將 <a> 換成 <div>，並對接安全的 POST 憑證提交機制，100% 避開 Swup 的無效攔截 -->
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 絕對不被劫持的總返回按鈕 -->
+    <a href="/castle" class="back-btn">
+        {% if current_lang == 'zh' %}← 返回大禮堂
+        {% elif current_lang == 'ja' %}← 大広間へ戻る
+        {% elif current_lang == 'ko' %}← 대연회장으로 복귀{% endif %}
+    </a>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="solace-scene">
+
+            <h1 class="solace-title">THE SUNSET SOLACE</h1>
+            <p class="solace-subtitle">
+                {% if current_lang == 'zh' %}✦ 黃昏溫室：至高神聖的雙人秘密密室 ✦
+                {% elif current_lang == 'ja' %}✦ 夕暮れの温室：二人だけの神聖な秘密基地 ✦
+                {% elif current_lang == 'ko' %}✦ 황혼의 온실: 최고로 신성한 둘만의 비밀 아지트 ✦{% endif %}
+            </p>
+
+            <div class="letter-container">
+                <div class="letter-salutation">{{ letter.salutation }}</div>
+                <div class="letter-body">{{ letter.body }}</div>
+                <div class="letter-signature">✦ {{ letter.signature }} ✦</div>
+            </div>
+
+            <div class="resonance-shrine">
+                <h3 class="shrine-title">THE RESONANCE ECHO STONE (共鳴留聲石)</h3>
+
+                <div class="quill-console-box">
+                    <form action="/solace" method="POST" onsubmit="return validateConsoleForm()">
+                        <input type="hidden" name="secret_key" value="{{ secret_key }}">
+                        <input type="hidden" name="action" value="write">
+
+                        <label class="console-label">✦ SENDER IDENTITY</label>
+                        <input type="text" name="sender" id="sender_id" class="quill-input-field" maxlength="20"
+                            placeholder="{% if current_lang == 'zh' %}署名你的巫師稱號...{% elif current_lang == 'ja' %}署名を入力...{% elif current_lang == 'ko' %}마법사 닉네임을 입력하세요...{% endif %}">
+
+                        <label class="console-label" style="display:block; margin-top:15px;">✦ PRIVATE ECHO
+                            WHISPER</label>
+                        <textarea name="text" id="whisper_text" class="quill-input-field" rows="4" maxlength="300"
+                            style="resize: none;"
+                            placeholder="{% if current_lang == 'zh' %}向共鳴石注入只有彼此能看見的悄悄話...{% elif current_lang == 'ja' %}二人だけの秘密の囁きを刻む...{% elif current_lang == 'ko' %}둘만의 비밀 대화를 공명석에 새겨보세요...{% endif %}"></textarea>
+
+                        <button type="submit" class="drop-message-btn" style="width: 100%; margin-top: 15px;">
+                            ✦ {% if current_lang == 'zh' %}注入靈魂共鳴{% elif current_lang == 'ja' %}魂を共鳴させる{% elif
+                            current_lang == 'ko' %}영혼의 대화 주입{% endif %}
+                        </button>
+                    </form>
+                </div>
+
+                <div class="private-chat-stream">
+                    {% if private_messages %}
+                    {% for msg in private_messages %}
+
+                    <div
+                        class="chat-bubble-card {% if '紗夏' in msg.sender or 'Sana' in msg.sender or 'sana' in msg.sender %}alliance-sana{% else %}alliance-wizard{% endif %}">
+                        <div class="chat-header-row">
+                            <span class="chat-meta-name">✦ {{ msg.sender }}</span>
+                            <span>ECHO CHAT</span>
+                        </div>
+                        <div class="chat-main-text">{{ msg.text }}</div>
+                    </div>
+
+                    {% endfor %}
+                    {% else %}
+                    <div
+                        style="text-align: center; font-style: italic; color: rgba(255,255,255,0.3); font-size: 13.5px; font-weight: 700; padding: 30px 0;">
+                        {% if current_lang == 'zh' %}共鳴石正靜靜懸浮，等待著你與紗夏刻下第一句私密對話...
+                        {% elif current_lang == 'ja' %}共鳴石が静かに浮かび、あなたとサナの最初の会話を待っています...
+                        {% elif current_lang == 'ko' %}공명석이 은은하게 빛나며 당신과 사나의 첫 대화를 기다립니다...{% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- 🔒 您原裝珍貴的秘密憑證安全傳送陣表單 -->
+        <form id="secure-lang-form" action="/solace" method="POST" style="display: none;">
+            <input type="hidden" name="secret_key" value="{{ secret_key }}">
+        </form>
+
+        <script>
+            // 🔒 憑證防禦傳送：一鍵切換多國語言，利用您的隱藏表單 100% 留住密鑰、原地秒切語系
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=" + (30 * 24 * 60 * 60);
+                let form = document.getElementById('secure-lang-form');
+                if (form) {
+                    form.action = "/solace";
+                    form.submit();
+                }
+            }
+
+            function validateConsoleForm() {
+                let sender = document.getElementById('sender_id').value.trim();
+                let text = document.getElementById('whisper_text').value.trim();
+
+                if (!sender || !text) {
+                    let currentLang = "{{ current_lang }}";
+                    if (currentLang === 'ja') alert("🪄 署名和悄悄話內容不能為空欄！");
+                    else if (currentLang === 'ko') alert("🪄 닉네임과 대화 내용을 모두 입력해 주세요!");
+                    else alert("🪄 署名稱號與秘密悄悄話欄位不得留空！");
+                    return false;
+                }
+                return true;
+            }
+
+            // 🪐 初始化全站 Swup 傳送陣晶片
+            const swup = new Swup({
+                animationSelector: '[class*="transition-"]',
+                containers: ['#swup']
+            });
+            window.swup = swup;
+        </script>
+    </main>
+</body>
+
+</html>

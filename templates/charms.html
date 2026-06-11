@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 符咒學教室</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #030303;
+            color: #f4e8d1;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 教室情境背景 (💡 已優化對齊 .webp) */
+        .charms-classroom {
+            position: relative;
+            min-height: 100vh;
+            background-image: url('/static/charms_classroom.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 60px 20px;
+            box-sizing: border-box;
+        }
+
+        .charms-classroom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 40%, rgba(0, 0, 0, 0.2) 0%, rgba(0, 0, 0, 0.9) 100%);
+            z-index: 1;
+        }
+
+        /* 🌐 右上角古典懸浮多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+            width: 135px;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        .classroom-title {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            letter-spacing: 4px;
+            text-align: center;
+            color: #ffd700;
+            text-shadow: 0px 4px 15px rgba(255, 215, 0, 0.4), 0 0 30px rgba(0, 0, 0, 0.9);
+            margin-bottom: 60px;
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            color: #ffd700;
+            text-decoration: none;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        /* 魔法書架與開卷 3D 結構 */
+        .bookshelf {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 40px;
+            padding: 20px;
+        }
+
+        .magic-book {
+            width: 160px;
+            height: 240px;
+            background: linear-gradient(135deg, #3a1c5c, #1e0b36);
+            border: 2px solid #c5a059;
+            border-radius: 4px 12px 12px 4px;
+            box-shadow: 5px 15px 25px rgba(0, 0, 0, 0.8), inset 3px 0 5px rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+            position: relative;
+            transition: transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.4s ease;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px 15px;
+            box-sizing: border-box;
+        }
+
+        .magic-book::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 10px;
+            bottom: 0;
+            width: 2px;
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 4px rgba(0, 0, 0, 0.6);
+        }
+
+        .magic-book:hover {
+            transform: translateY(-15px) scale(1.05);
+            box-shadow: 0 25px 40px rgba(107, 33, 168, 0.6);
+            border-color: #ffd700;
+        }
+
+        .book-type {
+            font-size: 11px;
+            color: #c5a059;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 900;
+            text-align: right;
+        }
+
+        .book-title {
+            font-size: 16px;
+            color: #ffffff;
+            font-weight: 900;
+            line-height: 1.4;
+            text-shadow: 1px 2px 4px rgba(0, 0, 0, 0.8);
+            margin-top: auto;
+            margin-bottom: 10px;
+        }
+
+        .book-year {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: #ffd700;
+            font-weight: 700;
+        }
+
+        .book-popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.88);
+            backdrop-filter: blur(15px);
+            z-index: 10;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .book-popup.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        /* 3D 魔導書展開外盒 (💡 羊皮內頁背景已優化對齊 .webp) */
+        .open-book-container {
+            width: 92%;
+            max-width: 850px;
+            height: 520px;
+            background-image: url('/static/paper.webp');
+            background-size: 100% 100%;
+            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95);
+            border-radius: 4px;
+            display: flex;
+            position: relative;
+            transform: rotateX(15deg) scale(0.85);
+            transition: transform 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+            overflow: hidden;
+        }
+
+        .book-popup.active .open-book-container {
+            transform: rotateX(0deg) scale(1);
+        }
+
+        .open-book-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 30px;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.5) 50%, rgba(0, 0, 0, 0.2));
+            transform: translateX(-50%);
+            pointer-events: none;
+        }
+
+        .book-left-page {
+            width: 50%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 40px 30px 40px 45px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .album-cover-box {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            border-radius: 4px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            background-color: #000;
+        }
+
+        .album-cover {
+            width: 100%;
+            height: 100%;
+        }
+
+        .book-right-page {
+            width: 50%;
+            height: 100%;
+            box-sizing: border-box;
+            padding: 40px 45px 40px 30px;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+            scrollbar-width: none;
+        }
+
+        .book-right-page::-webkit-scrollbar {
+            display: none;
+        }
+
+        .popup-meta {
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            color: #5c4033;
+            margin-bottom: 5px;
+            font-weight: 800;
+        }
+
+        .popup-title {
+            font-size: 24px;
+            color: #0f0a07;
+            margin: 0 0 5px 0;
+            font-weight: 900;
+        }
+
+        .popup-album {
+            font-size: 14px;
+            color: #4a148c;
+            font-weight: 800;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.15);
+            padding-bottom: 8px;
+        }
+
+        .popup-desc {
+            font-size: 14.5px;
+            line-height: 2;
+            text-align: justify;
+            color: #22140c;
+            font-weight: 800;
+            text-indent: 28px;
+            margin-bottom: 25px;
+        }
+
+        .popup-effect {
+            font-size: 13.5px;
+            background: rgba(74, 20, 140, 0.08);
+            border: 1px dashed #4a148c;
+            padding: 12px;
+            border-radius: 3px;
+            font-weight: 900;
+            color: #4a148c;
+            text-align: center;
+        }
+
+        .close-book {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 32px;
+            cursor: pointer;
+            color: #4a148c;
+            font-weight: 900;
+            z-index: 5;
+            transition: transform 0.3s ease;
+        }
+
+        .close-book:hover {
+            transform: scale(1.1) rotate(90deg);
+        }
+
+        @media (max-width: 768px) {
+            .open-book-container {
+                flex-direction: column;
+                height: 85vh;
+                overflow-y: auto;
+                background-size: cover;
+            }
+
+            .open-book-container::after {
+                display: none;
+            }
+
+            .book-left-page,
+            .book-right-page {
+                width: 100%;
+                height: auto;
+                padding: 25px;
+            }
+
+            .album-cover-box {
+                height: 260px;
+            }
+
+            .lang-compass {
+                top: 15px;
+                right: 15px;
+                padding: 3px 8px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <main id="swup" class="transition-fade">
+        <div class="charms-classroom">
+            <a href="/castle" class="back-btn">
+                {% if current_lang == 'zh' %}← 返回大禮堂
+                {% elif current_lang == 'ja' %}← 大広間へ戻る
+                {% elif current_lang == 'ko' %}← 대연회장으로 복귀{% endif %}
+            </a>
+            <h1 class="classroom-title">CHARMS CLASSROOM</h1>
+
+            <div class="bookshelf">
+                {% for book in music_books %}
+                <div class="magic-book" data-title="{{ book.title }}" data-album="{{ book.album }}"
+                    data-year="{{ book.year }}" data-type="{{ book.type }}" data-desc="{{ book.description }}"
+                    data-effect="{{ book.magic_effect }}" data-cover="{{ book.cover }}" data-pos="{{ book.position }}"
+                    onclick="triggerBookOpen(this)">
+                    <div class="book-type">{{ book.type }}</div>
+                    <div class="book-title">{{ book.title }}</div>
+                    <div class="book-year">{{ book.year }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="book-popup" id="book-popup">
+            <div class="open-book-container">
+                <span class="close-book" onclick="closeBook()">&times;</span>
+
+                <div class="book-left-page">
+                    <div class="album-cover-box">
+                        <img src="" id="popup-cover" class="album-cover" alt="Album Cover">
+                    </div>
+                </div>
+
+                <div class="book-right-page">
+                    <div class="popup-meta"><span id="popup-year"></span> • <span id="popup-type"></span></div>
+                    <div class="popup-title" id="popup-title"></div>
+                    <div class="popup-album" id="popup-album"></div>
+                    <div class="popup-desc" id="popup-desc"></div>
+                    <div class="popup-effect" id="popup-effect"></div>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // 🛡️ 全新安全解譯核心：直接從 DOM 節點抽取純淨字串，不再受任何特殊韓文字元與變數引號干擾
+            function triggerBookOpen(bookElement) {
+                let title = bookElement.getAttribute('data-title');
+                let album = bookElement.getAttribute('data-album');
+                let year = bookElement.getAttribute('data-year');
+                let type = bookElement.getAttribute('data-type');
+                let desc = bookElement.getAttribute('data-desc');
+                let effect = bookElement.getAttribute('data-effect');
+                let cover = bookElement.getAttribute('data-cover');
+                let position = bookElement.getAttribute('data-pos');
+
+                document.getElementById('popup-title').innerText = title;
+
+                let currentLang = "{{ current_lang }}";
+                let albumPrefix = "收錄於 ";
+                if (currentLang === 'ja') albumPrefix = "収録アルバム：";
+                else if (currentLang === 'ko') albumPrefix = "수록 음반: ";
+
+                document.getElementById('popup-album').innerText = albumPrefix + album;
+                document.getElementById('popup-year').innerText = year;
+                document.getElementById('popup-type').innerText = type;
+                document.getElementById('popup-desc').innerText = desc;
+                document.getElementById('popup-effect').innerText = effect;
+
+                let coverImg = document.getElementById('popup-cover');
+                coverImg.src = cover;
+                coverImg.style.objectFit = "cover";
+                coverImg.style.objectPosition = position;
+
+                document.getElementById('book-popup').classList.add('active');
+            }
+
+            function closeBook() {
+                document.getElementById('book-popup').classList.remove('active');
+            }
+
+            window.onclick = function (event) {
+                let popup = document.getElementById('book-popup');
+                if (event.target == popup) {
+                    popup.classList.remove('active');
+                }
+            }
+
+            // 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 visit() 標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

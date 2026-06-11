@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Platinum Starlight - 粉絲氣泡牆</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700&family=Noto+Serif+TC:wght@500;900&display=swap"
+        rel="stylesheet">
+
+    <!-- 🌐 僅在最外層引入 Swup.js 核心，其餘 100% 維持您原本的程式碼 -->
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #050208;
+            font-family: 'Montserrat', 'Noto Serif TC', serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🪐 1. 夢幻應援海氣泡背景 (💡 檔名已完美對齊 .webp) */
+        .bubble-container {
+            min-height: 100vh;
+            position: relative;
+            background-image: url('/static/bubble_bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            box-sizing: border-box;
+            padding-bottom: 80px;
+        }
+
+        /* 🌐 2. 右上角白金多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .compass-current {
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 18px;
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 👑 3. 標題大廳樞紐 */
+        .bubble-header {
+            text-align: center;
+            padding-top: 80px;
+            padding-bottom: 40px;
+        }
+
+        .bubble-header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 12px;
+        }
+
+        .bubble-header p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+            color: #aaa;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        /* 🧭 4. 現代星光導覽列 */
+        .starlight-nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 60px;
+        }
+
+        .nav-item {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888888;
+            text-decoration: none;
+            letter-spacing: 3px;
+            padding: 10px 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 📨 5. 巨星通訊核心：高奢半透明 Bubble 訊息輸入艙 */
+        .bubble-terminal-wrapper {
+            max-width: 680px;
+            margin: 0 auto 60px auto;
+            padding: 0 20px;
+            box-sizing: border-box;
+        }
+
+        .bubble-terminal {
+            background: rgba(15, 10, 20, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .terminal-row {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .bubble-input-name {
+            width: 180px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            padding: 12px 18px;
+            color: #fff;
+            font-size: 13.5px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: all 0.3s;
+        }
+
+        .bubble-input-msg {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            padding: 12px 18px;
+            color: #fff;
+            font-size: 13.5px;
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            height: 46px;
+            resize: none;
+            line-height: 1.5;
+        }
+
+        .bubble-input-name:focus,
+        .bubble-input-msg:focus {
+            outline: none;
+            border-color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .bubble-submit-btn {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            color: #000000;
+            font-family: 'Cinzel', 'Noto Serif TC', serif;
+            font-size: 12.5px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            padding: 14px;
+            border-radius: 2px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+        }
+
+        .bubble-submit-btn:hover {
+            background: transparent;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.4);
+        }
+
+        /* 💬 6. 聊天室瀑布流：手機動態對話氣泡牆 */
+        .bubble-chat-wall {
+            max-width: 720px;
+            margin: 0 auto;
+            padding: 0 25px;
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+            box-sizing: border-box;
+        }
+
+        /* 單個手機 Bubble 訊息盒 */
+        .chat-bubble-card {
+            max-width: 75%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 18px 24px;
+            box-sizing: border-box;
+            backdrop-filter: blur(15px);
+            align-self: flex-start;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            position: relative;
+            animation: rippleFloat 5s ease-in-out infinite;
+        }
+
+        /* 巧妙設計：將 ONCE 的留言隨機打散，部分靠右排 */
+        .chat-bubble-card:nth-child(2n) {
+            align-self: flex-end;
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.15);
+            animation-delay: -1.5s;
+            animation-duration: 6s;
+        }
+
+        .chat-bubble-card:nth-child(3n) {
+            animation-delay: -3s;
+            animation-duration: 4.5s;
+        }
+
+        /* 暱稱大標 */
+        .bubble-sender-name {
+            font-family: 'Cinzel', 'Noto Serif TC', serif;
+            font-size: 11px;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.5);
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .chat-bubble-card:nth-child(2n) .bubble-sender-name {
+            color: rgba(0, 242, 254, 0.6);
+        }
+
+        /* 應援內文 */
+        .bubble-msg-text {
+            font-size: 13.5px;
+            line-height: 1.8;
+            color: #eeeeee;
+            text-align: justify;
+            font-weight: 300;
+            word-break: break-word;
+        }
+
+        /* 🌌 氣泡水流般緩慢漂浮動畫 */
+        @keyframes rippleFloat {
+            0% {
+                transform: translateY(0px) scale(1);
+            }
+
+            50% {
+                transform: translateY(-6px) scale(1.01);
+            }
+
+            100% {
+                transform: translateY(0px) scale(1);
+            }
+        }
+
+        /* 📱 RWD 行動端完美隔離屏障 */
+        @media (max-width: 768px) {
+            .terminal-row {
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            .bubble-input-name {
+                width: 100%;
+            }
+
+            .chat-bubble-card {
+                max-width: 90%;
+                padding: 15px 20px;
+            }
+
+            .starlight-nav {
+                flex-wrap: wrap;
+                gap: 15px 25px;
+                padding: 0 20px;
+            }
+
+            .bubble-header h1 {
+                font-size: 32px;
+                letter-spacing: 6px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角白金多國語言羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <!-- 💡 置換為 <div>，100% 繞開 Swup 攔截，原地秒切語系！ -->
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="bubble-container">
+
+            <!-- 👑 2. 標題大廳樞紐 -->
+            <div class="bubble-header">
+                <a href="/starlight" style="text-decoration: none; color: inherit;">
+                    <h1 style="cursor: pointer;">{{ ui.title }}</h1>
+                </a>
+                <p>{{ ui.subtitle }}</p>
+            </div>
+
+            <!-- 🧭 3. 現代璀璨導覽軌道 (全站跨房異步互通！) -->
+            <div class="starlight-nav">
+                <a href="/starlight" class="nav-item">{{ nav.starlight }}</a>
+                <a href="/dressing" class="nav-item">{{ nav.dressing }}</a>
+                <a href="/studio" class="nav-item">{{ nav.studio }}</a>
+                <a href="/tour" class="nav-item">{{ nav.tour }}</a>
+                <a href="/bubble" class="nav-item active">{{ nav.bubble }}</a>
+                <a href="/night_drive" class="nav-item">{{ nav.night_drive }}</a>
+            </div>
+
+            <!-- 📨 4. 高奢毛玻璃 Bubble 發送終端艙 -->
+            <div class="bubble-terminal-wrapper">
+                <!-- 💡 核心進化：原生 Action 攔截，改由 Ajax 智慧異步投遞 -->
+                <form id="bubble-drop-form" onsubmit="submitBubbleMessage(event)" class="bubble-terminal">
+                    <div class="terminal-row">
+                        <input type="text" name="wizard_name" id="wizard_name" class="bubble-input-name"
+                            placeholder="{{ ui.placeholder_name }}" required maxlength="30">
+                        <textarea name="wizard_msg" id="wizard_msg" class="bubble-input-msg"
+                            placeholder="{{ ui.placeholder_msg }}" required maxlength="500"></textarea>
+                    </div>
+                    <button type="submit" class="bubble-submit-btn">{{ ui.btn }}</button>
+                </form>
+            </div>
+
+            <!-- 💬 5. 粉絲通訊瀑布流牆（最新訊息在最上） -->
+            <div class="bubble-chat-wall" id="bubble-chat-wall">
+                {% for msg in messages %}
+                <div class="chat-bubble-card">
+                    <div class="bubble-sender-name">📬 来自 ONCE • {{ msg.name }}</div>
+                    <div class="bubble-msg-text">{{ msg.message }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <script>
+            // 💡 1. ✒️ 異步 Bubble 應援 Ajax 引擎核心 (徹底避免 Action 全頁重整)
+            function submitBubbleMessage(event) {
+                event.preventDefault();
+
+                let nameField = document.getElementById('wizard_name');
+                let msgField = document.getElementById('wizard_msg');
+                let name = nameField.value.trim();
+                let msg = msgField.value.trim();
+
+                if (!name || !msg) return;
+
+                fetch('/bubble', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'wizard_name=' + encodeURIComponent(name) + '&wizard_msg=' + encodeURIComponent(msg)
+                })
+                    .then(response => response.text())
+                    .then(htmlText => {
+                        let parser = new DOMParser();
+                        let doc = parser.parseFromString(htmlText, 'text/html');
+                        let newWall = doc.getElementById('bubble-chat-wall');
+
+                        if (newWall) {
+                            document.getElementById('bubble-chat-wall').innerHTML = newWall.innerHTML;
+                            // 成功後排空留言輸入框，保留署名以便 ONCE 連續打 call
+                            msgField.value = '';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("❌ Bubble 通訊陣列故障:", err);
+                        window.location.reload();
+                    });
+            }
+
+            // 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 visit() 白金標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

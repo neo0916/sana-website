@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Platinum Starlight - 午夜保母車</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700&family=Noto+Serif+TC:wght@500;800&display=swap"
+        rel="stylesheet">
+
+    <!-- 🌐 僅在最外層引入 Swup.js 核心，其餘 100% 維持您原本的程式碼 -->
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            font-family: 'Montserrat', 'Noto Serif TC', serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🌆 1. 保母車窗背景大復甦 */
+        .drive-container {
+            min-height: 100vh;
+            position: relative;
+            background-image: url('/static/car_window.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            box-sizing: border-box;
+            padding-bottom: 80px;
+            z-index: 1;
+        }
+
+        /* 🌐 2. 右上角多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffffff;
+        }
+
+        .compass-current {
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 18px;
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 返回大廳總按鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 105;
+            color: #ffffff;
+            text-decoration: none;
+            font-size: 12px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            padding: 8px 18px;
+            border-radius: 2px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        /* 👑 3. 標題大廳樞紐 */
+        .drive-header {
+            text-align: center;
+            padding-top: 60px;
+            padding-bottom: 20px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .drive-header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 36px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 12px;
+            text-shadow: 0 4px 15px rgba(0, 0, 0, 0.9);
+        }
+
+        /* 🧭 4. 現代璀璨導覽軌道 */
+        .starlight-nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            z-index: 5;
+        }
+
+        .nav-item {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.4);
+            text-decoration: none;
+            letter-spacing: 3px;
+            padding: 10px 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 📱 5. 智慧型手機本體 */
+        .phone-stage {
+            width: 395px;
+            height: 800px;
+            margin: 0 auto;
+            background: #000000;
+            border: 4px solid rgba(255, 255, 255, 0.12);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.95), 0 0 30px rgba(255, 255, 255, 0.05);
+            box-sizing: border-box;
+            padding: 30px 16px 20px 16px;
+            z-index: 5;
+        }
+
+        .phone-island {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 110px;
+            height: 18px;
+            background: #161616;
+            border-radius: 20px;
+            z-index: 100;
+        }
+
+        /* 🔒 狀態 A：未解鎖的手機鎖屏主畫面 */
+        .phone-lock-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            box-sizing: border-box;
+            padding: 20px;
+        }
+
+        .lock-clock {
+            font-size: 55px;
+            font-weight: 300;
+            letter-spacing: 1px;
+            color: #fff;
+            margin-bottom: 5px;
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        .lock-title {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: rgba(255, 255, 255, 0.6);
+            margin-bottom: 45px;
+        }
+
+        .lock-form-box {
+            width: 100%;
+        }
+
+        .lock-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 14px;
+            color: #fff;
+            text-align: center;
+            font-size: 14px;
+            letter-spacing: 3px;
+            box-sizing: border-box;
+            transition: all 0.3s;
+            margin-bottom: 20px;
+        }
+
+        .lock-input:focus {
+            outline: none;
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .lock-submit-btn {
+            width: 100%;
+            background: #ffffff;
+            border: 1px solid #ffffff;
+            color: #000;
+            padding: 14px;
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lock-submit-btn:hover {
+            background: transparent;
+            color: #fff;
+        }
+
+        /* 🔓 狀態 B：已成功解鎖的手機內部系統 */
+        .phone-home-screen {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .phone-top-bar {
+            font-size: 10px;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.45);
+            text-align: center;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .unread-banner-notification {
+            height: 52%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 14px;
+            padding: 16px;
+            box-sizing: border-box;
+            backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        }
+
+        .msg-app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .app-identity {
+            font-size: 10.5px;
+            font-weight: 900;
+            color: #00ffff;
+            letter-spacing: 1px;
+            text-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
+        }
+
+        .msg-time-badge {
+            font-size: 9.5px;
+            color: rgba(255, 255, 255, 0.4);
+            font-weight: 700;
+        }
+
+        .msg-sender-line {
+            font-family: 'Noto Serif TC', serif;
+            font-size: 13px;
+            font-weight: 800;
+            color: #ffffff;
+            margin-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+            padding-bottom: 6px;
+        }
+
+        .msg-body-scroll {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 3px;
+            scrollbar-width: none;
+        }
+
+        .msg-body-scroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .letter-salutation {
+            font-size: 14px;
+            font-weight: 800;
+            color: #fff;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .letter-paragraphs {
+            font-size: 13px;
+            line-height: 1.8;
+            color: #ffffff;
+            text-align: justify;
+            font-weight: 400;
+            white-space: pre-line;
+            margin-bottom: 20px;
+        }
+
+        .letter-signature {
+            font-size: 13px;
+            font-weight: 800;
+            text-align: right;
+            color: #00ffff;
+            text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+        }
+
+        .phone-private-messenger {
+            height: 48%;
+            background: rgba(20, 15, 30, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 14px;
+            padding: 12px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(25px);
+        }
+
+        .messenger-header {
+            font-size: 11px;
+            font-weight: 800;
+            color: rgba(255, 255, 255, 0.5);
+            text-align: center;
+            margin-bottom: 10px;
+            letter-spacing: 1.5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: 6px;
+        }
+
+        .phone-chat-stream {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            padding-right: 2px;
+            scrollbar-width: none;
+        }
+
+        .phone-chat-stream::-webkit-scrollbar {
+            display: none;
+        }
+
+        .phone-bubble {
+            max-width: 82%;
+            padding: 10px 14px;
+            border-radius: 14px;
+            box-sizing: border-box;
+            font-size: 12.5px;
+            line-height: 1.5;
+            position: relative;
+        }
+
+        .phone-bubble-meta {
+            font-size: 9px;
+            font-weight: 700;
+            margin-bottom: 4px;
+            opacity: 0.6;
+        }
+
+        .phone-bubble-text {
+            font-weight: 500;
+            text-align: justify;
+            word-break: break-word;
+        }
+
+        .p-bubble-wizard {
+            align-self: flex-start;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            color: #ffffff;
+        }
+
+        .p-bubble-sana {
+            align-self: flex-end;
+            background: rgba(147, 51, 234, 0.45);
+            border: 1px solid #a855f7;
+            color: #ffffff;
+            box-shadow: 0 0 15px rgba(147, 51, 234, 0.5);
+        }
+
+        .p-bubble-sana .phone-bubble-meta {
+            color: #f3e8ff;
+            text-align: right;
+        }
+
+        .p-bubble-sana .phone-bubble-meta::after {
+            content: ' ✦ 👑';
+            color: #ffd700;
+        }
+
+        .p-bubble-sana .phone-bubble-text {
+            font-weight: 700;
+        }
+
+        .phone-input-bar {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 8px;
+        }
+
+        .phone-chat-input {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            padding: 8px 14px;
+            color: #fff;
+            font-size: 12px;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            height: 34px;
+        }
+
+        .phone-chat-input:focus {
+            border-color: #00ffff;
+            background: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 0 8px rgba(0, 242, 254, 0.3);
+        }
+
+        .phone-send-btn {
+            background: #ffffff;
+            border: none;
+            color: #000;
+            font-size: 11px;
+            font-weight: 900;
+            padding: 0 14px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            height: 34px;
+        }
+
+        .phone-send-btn:hover {
+            background: #00ffff;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+        }
+
+        @media (max-width: 450px) {
+
+            body,
+            html {
+                height: auto !important;
+                overflow-y: auto !important;
+            }
+
+            .drive-container {
+                height: auto !important;
+            }
+
+            .phone-stage {
+                width: 100vw;
+                height: 100vh;
+                border: none;
+                border-radius: 0;
+                padding: 50px 15px 15px 15px;
+            }
+
+            .phone-island {
+                top: 14px;
+            }
+
+            .starlight-nav {
+                flex-wrap: wrap;
+                gap: 10px 20px;
+                padding: 0 20px;
+            }
+
+            .drive-header h1 {
+                font-size: 32px;
+            }
+
+            .unread-banner-notification {
+                height: 48%;
+            }
+
+            .phone-private-messenger {
+                height: 52%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角白金多國語言羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 絕對不被劫持的總返回大廳鈕 -->
+    <a href="/starlight" class="back-btn">
+        {% if current_lang == 'zh' %}← 返回星光大道{% elif current_lang == 'ja' %}← 星光の道へ戻る{% elif current_lang == 'ko' %}←
+        스타라이트 로드로 복귀{% endif %}
+    </a>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="drive-container">
+
+            <div class="drive-header">
+                <a href="/starlight" style="text-decoration: none; color: inherit;">
+                    <h1 style="cursor: pointer;">MIDNIGHT DRIVE</h1>
+                </a>
+            </div>
+
+            <!-- 🧭 現代璀璨導覽軌道 -->
+            <div class="starlight-nav">
+                <a href="/starlight" class="nav-item">{{ nav.starlight }}</a>
+                <a href="/dressing" class="nav-item">{{ nav.dressing }}</a>
+                <a href="/studio" class="nav-item">{{ nav.studio }}</a>
+                <a href="/tour" class="nav-item">{{ nav.tour }}</a>
+                <a href="/bubble" class="nav-item">{{ nav.bubble }}</a>
+                <a href="/night_drive" class="nav-item active">{{ nav.night_drive }}</a>
+            </div>
+
+            <div class="phone-stage">
+                <div class="phone-island"></div>
+
+                {% if not is_authenticated %}
+                <div class="phone-lock-screen">
+                    <div class="lock-clock" id="livePhoneClock">23:49</div>
+                    <div class="lock-title">{{ ui.lock_title }}</div>
+
+                    <form action="/night_drive" method="POST" class="lock-form-box">
+                        <input type="password" name="secret_key" class="lock-input" placeholder="••••••••" required>
+                        <button type="submit" class="lock-submit-btn">{{ ui.btn }}</button>
+                    </form>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 30px; letter-spacing: 1px;">
+                        {{ ui.lock_tip }}</div>
+                </div>
+                {% else %}
+
+                <div class="phone-home-screen">
+                    <div class="phone-top-bar">🔒 {{ ui.status }}</div>
+
+                    <div class="unread-banner-notification">
+                        <div class="msg-app-header">
+                            <span class="app-identity">💬 iMessage</span>
+                            <span class="msg-time-badge">2018 - 2026 置頂</span>
+                        </div>
+                        <div class="msg-sender-line">👤 {{ ui.sender }}</div>
+
+                        <div class="msg-body-scroll">
+                            <span class="letter-salutation">{{ letter.salutation }}</span>
+                            <div class="letter-paragraphs">{{ letter.body }}</div>
+                            <div class="letter-signature">{{ letter.signature | safe }}</div>
+                        </div>
+                    </div>
+
+                    <div class="phone-private-messenger">
+                        <div class="messenger-header">🔒 SECURE ENCRYPTED CHAT</div>
+
+                        <div class="phone-chat-stream">
+                            {% if private_messages %}
+                            {% for msg in private_messages %}
+                            <div
+                                class="phone-bubble {% if '紗夏' in msg.sender or 'Sana' in msg.sender or 'sana' in msg.sender %}p-bubble-sana{% else %}p-bubble-wizard{% endif %}">
+                                <div class="phone-bubble-meta">✦ {{ msg.sender }}</div>
+                                <div class="phone-bubble-text">{{ msg.text }}</div>
+                            </div>
+                            {% endfor %}
+                            {% else %}
+                            <div
+                                style="text-align: center; font-style: italic; color: rgba(255,255,255,0.3); font-size: 11.5px; padding: 20px 0;">
+                                iMessage Channel Open. Waiting for connection...
+                            </div>
+                            {% endif %}
+                        </div>
+
+                        <form action="/night_drive" method="POST" onsubmit="return validatePhoneForm()">
+                            <input type="hidden" name="secret_key" value="{{ secret_key }}">
+                            <input type="hidden" name="action" value="write">
+
+                            <div class="phone-input-bar">
+                                <input type="text" name="sender" id="p_sender_id" placeholder="Name" required
+                                    style="width: 60px; font-size: 11px;" class="phone-chat-input" maxlength="15">
+                                <input type="text" name="text" id="p_whisper_text" placeholder="iMessage" required
+                                    class="phone-chat-input" maxlength="250">
+                                <button type="submit" class="phone-send-btn">SEND</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+        </div>
+
+        <!-- 🔒 隱藏表單憑證安全重載防禦 -->
+        <form id="secure-lang-form" action="/night_drive" method="POST" style="display: none;">
+            <input type="hidden" name="secret_key" value="{{ secret_key }}">
+        </form>
+
+        <script>
+            // 🔒 憑證安全防禦重載
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=" + (30 * 24 * 60 * 60);
+                let form = document.getElementById('secure-lang-form');
+                if (form) {
+                    form.action = "/night_drive";
+                    form.submit();
+                }
+            }
+
+            // 時鐘大腦安全灌錄
+            function initDriveClock() {
+                const clockEl = document.getElementById('livePhoneClock');
+                if (clockEl) {
+                    const now = new Date();
+                    let hours = now.getHours().toString().padStart(2, '0');
+                    let minutes = now.getMinutes().toString().padStart(2, '0');
+                    clockEl.innerText = hours + ":" + minutes;
+                }
+            }
+
+            initDriveClock();
+
+            // 🪐 核心安全防禦隔離晶片：防止重複初始化 Swup 沒收全站 CSS 靈魂
+            if (!window.driveClockInterval) {
+                window.driveClockInterval = setInterval(initDriveClock, 1000);
+            }
+
+            function validatePhoneForm() {
+                let sender = document.getElementById('p_sender_id').value.trim();
+                let text = document.getElementById('p_whisper_text').value.trim();
+                if (!sender || !text) {
+                    alert("Message cannot be empty!");
+                    return false;
+                }
+                return true;
+            }
+
+            // 🪐 核心重裝：只在全域大腦空虛時才初始化 Swup，100% 免疫重複初始化破版 Bug！
+            if (!window.swup) {
+                const swup = new Swup({
+                    animationSelector: '[class*="transition-"]',
+                    containers: ['#swup']
+                });
+                window.swup = swup;
+            }
+        </script>
+    </main>
+</body>
+
+</html>

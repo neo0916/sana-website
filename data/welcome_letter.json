@@ -1,0 +1,47 @@
+{
+    "header": {
+        "zh": "HOGWARTS SCHOOL of WITCHCRAFT and WIZARDRY",
+        "ja": "HOGWARTS SCHOOL of WITCHCRAFT and WIZARDRY",
+        "ko": "HOGWARTS SCHOOL of WITCHCRAFT and WIZARDRY"
+    },
+    "sub_header": {
+        "zh": "Headmaster: Albus Dumbledore (Order of Merlin, First Class, Grand Sorc.)",
+        "ja": "Headmaster: Albus Dumbledore (Order of Merlin, First Class, Grand Sorc.)",
+        "ko": "Headmaster: Albus Dumbledore (Order of Merlin, First Class, Grand Sorc.)"
+    },
+    "salutation": {
+        "zh": "親愛的湊崎紗夏（Ms. S. Minatozaki）様：",
+        "ja": "親愛なる 湊﨑紗夏（Ms. S. Minatozaki）様：",
+        "ko": "친애하는 미나토자키 사나（Ms. S. Minatozaki）様에게:"
+    },
+    "p1": {
+        "zh": "我們很高興通知您，您已獲准入讀霍格華茲魔法學校。隨信附上所需書籍及裝備清單。",
+        "ja": "ここに、あなたがホグワーツ魔法魔術学校に選出されましたことをお伝えいたします。同封の必要書類・装備品リストをご確認ください。",
+        "ko": "귀하가 호그와트 마법학교에 정식 입학하게 되었음을 기쁜 마음으로 알려드립니다. 필요한 서적 및 장비 목록을 동봉합니다."
+    },
+    "p2": {
+        "zh": "這座專屬於您的魔法宇宙，已完整封存了您自1996年於大阪出生至今的所有生命軌跡、音樂創作與榮耀里程碑。在這裡，您的純真與汗水將化作永恆的守護魔咒。",
+        "ja": "あなただけの為に築かれたこの魔法の宇宙には、1996年に大阪で生を受けてから現在に至るまでの全ての軌跡、音楽、そして栄光の瞬間が封印されています。ここでのあなたの純粋な努力と汗は、永遠の守護魔術となるでしょう。",
+        "ko": "당신만을 위해 구축된 이 마법의 우주에는 1996년 오사카에서 태어난 순간부터 지금까지의 모든 생애 궤적, 음악 창작, 그리고 영광스러운 이정표들이 온전히 봉인되어 있습니다. 이곳에서 당신의 순수함과 땀방웃들은 영원한 수호 주문이 될 것입니다."
+    },
+    "p3": {
+        "zh": "學期定於九月一日開始。我們將於交誼廳靜候您的貓頭鷹帶來回信。",
+        "ja": "新学期は九月一日より始まります。談話室にて、あなたのフクロウによる返信を心待ちにしております。",
+        "ko": "학기는 9월 1일에 시작됩니다. 공용실에서 당신의 올빼미가 가져올 답장을 기쁜 마음으로 기다리겠습니다."
+    },
+    "signature": {
+        "zh": "副校長 米奈娃·麥（Minerva McGonagall）謹上",
+        "ja": "副校長 ミネルバ・マクゴナガル 敬具",
+        "ko": "교감 미네르바 맥고나걸 올림"
+    },
+    "btn_magic": {
+        "zh": "✦ 接受魔法的指引 (Enter Hogwarts)",
+        "ja": "✦ 魔法の導きを受け入れる (Enter Hogwarts)",
+        "ko": "✦ 마법의 인도를 받아들이다 (Enter Hogwarts)"
+    },
+    "btn_reality": {
+        "zh": "✧ 踏上璀璨的星途 (Embrace Reality)",
+        "ja": "✧ 輝かしい星の道へ踏み出す (Embrace Reality)",
+        "ko": "✧ 찬란한 별의 길을 나서다 (Embrace Reality)"
+    }
+}

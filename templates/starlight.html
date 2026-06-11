@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Platinum Starlight - 星光大道</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700;900&family=Noto+Serif+TC:wght@500;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+    <script src="https://unpkg.com/@swup/head-plugin@2"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #000000;
+            font-family: 'Montserrat', 'Noto Serif TC', serif;
+            color: #ffffff;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🪐 1. 白金流體高奢背景 */
+        .starlight-container {
+            min-height: 100vh;
+            position: relative;
+            background-image: url('/static/starlight_bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            box-sizing: border-box;
+            padding-bottom: 100px;
+        }
+
+        /* 🌐 2. 右上角白金多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .compass-current {
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 18px;
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 👑 3. 時尚頂部大標 */
+        .starlight-header {
+            text-align: center;
+            padding-top: 60px;
+            padding-bottom: 30px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .starlight-header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 12px;
+            color: #ffffff;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+        }
+
+        .starlight-header p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            color: #888888;
+            margin-top: 10px;
+            font-weight: 400;
+        }
+
+        /* 🧭 4. 五星環繞導覽列 */
+        .starlight-nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 60px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .nav-item {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888888;
+            text-decoration: none;
+            letter-spacing: 3px;
+            padding: 10px 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* ==================== 👑 Vogue 封面大使·頂奢時尚拉頁檔案 ==================== */
+        .celebrity-profile-container {
+            max-width: 1140px;
+            margin: 0 auto 120px auto;
+            padding: 0 30px;
+            box-sizing: border-box;
+            position: relative;
+            z-index: 5;
+        }
+
+        .vogue-editorial-layout {
+            display: flex;
+            gap: 50px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            backdrop-filter: blur(25px);
+            box-shadow: 0 35px 70px rgba(0, 0, 0, 0.7);
+            overflow: hidden;
+        }
+
+        .editorial-left-poster {
+            width: 38%;
+            min-height: 480px;
+            position: relative;
+            background-image: url('/static/starlight_bg.webp');
+            background-size: cover;
+            background-position: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: flex-end;
+            padding: 35px;
+            box-sizing: border-box;
+        }
+
+        .editorial-left-poster::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, transparent 100%);
+        }
+
+        .poster-badge {
+            position: relative;
+            z-index: 2;
+            font-family: 'Cinzel', serif;
+            font-size: 26px;
+            font-weight: 900;
+            letter-spacing: 4px;
+            border-left: 3px solid #ffffff;
+            padding-left: 15px;
+            line-height: 1;
+        }
+
+        /* 右側：不對稱高奢時尚拉頁 */
+        .editorial-right-sheet {
+            flex: 1;
+            padding: 45px 45px 45px 0;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .sheet-meta-tag {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            letter-spacing: 5px;
+            color: rgba(255, 255, 255, 0.4);
+            margin-bottom: 10px;
+            font-weight: 900;
+        }
+
+        .sheet-main-name {
+            font-family: 'Cinzel', 'Noto Serif TC', serif;
+            font-size: 46px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin: 0 0 25px 0;
+            line-height: 1.1;
+        }
+
+        .sheet-details-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-bottom: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 25px;
+        }
+
+        .detail-block {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .detail-label {
+            font-family: 'Cinzel', serif;
+            font-size: 11px;
+            color: #666666;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .detail-value {
+            font-size: 13.5px;
+            font-weight: 700;
+            font-family: 'Noto Serif TC', serif;
+            color: #dddddd;
+        }
+
+        .sheet-badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .luxury-tag-badge {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 6px 16px;
+            font-size: 11.5px;
+            font-weight: 700;
+            border-radius: 20px;
+            color: #ffffff;
+            letter-spacing: 1px;
+        }
+
+        .luxury-tag-badge.cyan {
+            border-color: #00ffff;
+            color: #00ffff;
+            font-weight: 900;
+        }
+
+        .sheet-essence-box {
+            font-size: 13px;
+            line-height: 2;
+            color: #aaaaaa;
+            text-align: justify;
+            font-weight: 300;
+            border-top: 1px dashed rgba(255, 255, 255, 0.1);
+            padding-top: 20px;
+        }
+
+        /* ==================== 🎞️ Vogue 雜誌風：縱向史詩編年史軌道 ==================== */
+        .vogue-timeline {
+            max-width: 1100px;
+            margin: 0 auto;
+            position: relative;
+            padding: 0 20px;
+        }
+
+        .vogue-timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background: linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0.05) 100%);
+            transform: translateX(-50%);
+        }
+
+        .vogue-row {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 120px;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .vogue-row.left {
+            flex-direction: row;
+        }
+
+        .vogue-row.right {
+            flex-direction: row-reverse;
+        }
+
+        .vogue-card {
+            width: 46%;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 2px;
+            padding: 35px;
+            box-sizing: border-box;
+            backdrop-filter: blur(15px);
+            transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .vogue-card:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5);
+        }
+
+        .vogue-year {
+            font-family: 'Cinzel', serif;
+            font-size: 55px;
+            font-weight: 900;
+            color: #ffffff;
+            margin: 0 0 5px 0;
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+
+        .vogue-date {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #888888;
+            margin-bottom: 25px;
+        }
+
+        .vogue-img-box {
+            width: 100%;
+            height: 280px;
+            overflow: hidden;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background-color: #111;
+        }
+
+        .vogue-img {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.6s ease;
+        }
+
+        .vogue-img.contain {
+            object-fit: contain;
+        }
+
+        .vogue-img.cover {
+            object-fit: cover;
+        }
+
+        .vogue-img.top {
+            object-position: top;
+        }
+
+        .vogue-img.center {
+            object-position: center;
+        }
+
+        .vogue-card:hover .vogue-img {
+            transform: scale(1.04);
+        }
+
+        .vogue-title {
+            font-size: 20px;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            color: #ffffff;
+            margin-bottom: 15px;
+            font-family: 'Noto Serif TC', serif;
+        }
+
+        .vogue-desc {
+            font-size: 13.5px;
+            line-height: 1.9;
+            color: #cccccc;
+            text-align: justify;
+            font-weight: 300;
+            margin-bottom: 20px;
+        }
+
+        .vogue-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 8px 15px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #ffffff;
+            border-radius: 2px;
+        }
+
+        .vogue-dot {
+            position: absolute;
+            left: 50%;
+            top: 40px;
+            width: 9px;
+            height: 9px;
+            background-color: #ffffff;
+            border: 3px solid #000000;
+            border-radius: 50%;
+            transform: translateX(-50%);
+            z-index: 3;
+            box-shadow: 0 0 10px #ffffff;
+            transition: all 0.3s ease;
+        }
+
+        .vogue-row:hover .vogue-dot {
+            background-color: #000000;
+            border-color: #ffffff;
+            scale: 1.2;
+            box-shadow: 0 0 20px #ffffff;
+        }
+
+        @media (max-width: 900px) {
+            .vogue-editorial-layout {
+                flex-direction: column;
+            }
+
+            .editorial-left-poster {
+                width: 100%;
+                min-height: 260px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            }
+
+            .editorial-left-poster img {
+                height: 100% !important;
+                right: 10px !important;
+            }
+
+            .editorial-right-sheet {
+                padding: 30px 20px;
+            }
+
+            .sheet-main-name {
+                font-size: 32px;
+            }
+
+            .sheet-details-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
+            }
+
+            .vogue-timeline::before {
+                left: 20px;
+            }
+
+            .vogue-row {
+                flex-direction: column !important;
+                padding-left: 45px;
+                margin-bottom: 60px;
+            }
+
+            .vogue-card {
+                width: 100%;
+                padding: 25px;
+            }
+
+            .vogue-dot {
+                left: 20px;
+            }
+
+            .starlight-nav {
+                flex-wrap: wrap;
+                gap: 15px 25px;
+                padding: 0 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <main id="swup" class="transition-fade">
+        <div class="starlight-container">
+
+            <div class="lang-compass">
+                <div class="compass-current">
+                    {% if current_lang == 'zh' %}🇹🇼 繁體中文
+                    {% elif current_lang == 'ja' %}🇯🇵 日本語
+                    {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+                </div>
+                <div class="lang-dropdown">
+                    <div onclick="changeLangSecure('zh')"
+                        class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文</div>
+                    <div onclick="changeLangSecure('ja')"
+                        class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語</div>
+                    <div onclick="changeLangSecure('ko')"
+                        class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어</div>
+                </div>
+            </div>
+
+            <div class="starlight-header">
+                <a href="/starlight" style="text-decoration: none; color: inherit;">
+                    <h1 style="cursor: pointer;">SANA</h1>
+                </a>
+                <p>The Platinum Starlight Universe</p>
+            </div>
+
+            <div class="starlight-nav">
+                <a href="/starlight" class="nav-item active">{{ nav.starlight }}</a>
+                <a href="/dressing" class="nav-item">{{ nav.dressing }}</a>
+                <a href="/studio" class="nav-item">{{ nav.studio }}</a>
+                <a href="/tour" class="nav-item">{{ nav.tour }}</a>
+                <a href="/bubble" class="nav-item">{{ nav.bubble }}</a>
+                <a href="/night_drive" class="nav-item">{{ nav.night_drive }}</a>
+            </div>
+
+            <div class="celebrity-profile-container">
+                <div class="vogue-editorial-layout">
+
+                    <div class="editorial-left-poster">
+                        <img src="/static/sana_cutout.webp" style="
+                                            position: absolute; 
+                                            height: 110%; 
+                                            bottom: 0; 
+                                            right: -50px; 
+                                            object-fit: contain;
+                                            z-index: 3;
+                                            filter: drop-shadow(-10px 10px 20px rgba(0,0,0,0.5));
+                                            pointer-events: none;
+                                        " alt="Sana Cutout">
+
+                        <div class="poster-badge">TWICE<br>SANA</div>
+                    </div>
+
+                    <div class="editorial-right-sheet">
+                        <div class="sheet-meta-tag">✦ {{ profile.reg_title }}</div>
+                        <div class="sheet-main-name">{{ profile.name }}</div>
+
+                        <div class="sheet-badges-row">
+                            <div class="luxury-tag-badge cyan">🪐 {{ profile.mbti }}</div>
+                            <div class="luxury-tag-badge">🧬 {{ profile.blood }}</div>
+                        </div>
+
+                        <div class="sheet-details-grid">
+                            <div class="detail-block">
+                                <span class="detail-label">BIRTH DATE</span>
+                                <span class="detail-value">{{ profile.birth }}</span>
+                            </div>
+                            <div class="detail-block">
+                                <span class="detail-label">HOMETOWN ORIGIN</span>
+                                <span class="detail-value">{{ profile.place }}</span>
+                            </div>
+                            <div class="detail-block" style="grid-column: span 2;">
+                                <span class="detail-label">GLOBAL ICON ALIASES</span>
+                                <span class="detail-value" style="color: rgba(255,255,255,0.6);">{{ profile.names
+                                    }}</span>
+                            </div>
+                        </div>
+
+                        <div class="sheet-essence-box">
+                            <strong>✦ INHERENT TALENT MAGIC:</strong><br>
+                            {{ profile.core }}
+                        </div>
+
+                    </div>
+
+                </div>
+            </div>
+
+            <div class="vogue-timeline">
+                {% for item in timeline %}
+                <div class="vogue-row {% if loop.index0 % 2 == 0 %}left{% else %}right{% endif %}">
+                    <div class="vogue-dot"></div>
+                    <div class="vogue-card">
+                        <div class="vogue-year">{{ item.year }}</div>
+                        <div class="vogue-date">{{ item.date }}</div>
+
+                        <div class="vogue-img-box">
+                            <img src="{{ item.image }}" class="vogue-img {{ item.fit_mode }} {{ item.position }}"
+                                alt="Sana Event">
+                        </div>
+
+                        <div class="vogue-title">{{ item.title }}</div>
+                        <div class="vogue-desc">{{ item.event }}</div>
+
+                        {% if item.achievement %}
+                        <div class="vogue-badge">
+                            <span>🏆 {{ item.achievement }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <script>
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+
+            // 🪐 只在沒被初始化時註冊 Swup
+            if (!window.swup) {
+                const swup = new Swup({
+                    animationSelector: '[class*="transition-"]',
+                    containers: ['#swup'],
+                    plugins: [new SwupHeadPlugin()] // 🔒 注入頭部同步保護盾！
+                });
+                window.swup = swup;
+            }
+        </script>
+    </main>
+
+</body>
+
+</html>

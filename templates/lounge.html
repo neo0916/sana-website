@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Savely - 交誼廳佈告欄</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Noto+Serif+TC:wght@600;900&display=swap"
+        rel="stylesheet">
+
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Noto Serif TC', serif;
+            background-color: #030303;
+            color: #f4e8d1;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 交誼廳大場景背景 (💡 檔名已完美對齊 .webp) */
+        .lounge-scene {
+            position: relative;
+            min-height: 100vh;
+            background-image: url('/static/common_room.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            display: flex;
+            box-sizing: border-box;
+            padding: 80px 40px 40px 40px;
+            gap: 40px;
+        }
+
+        /* ⚡ 溫暖壁爐火光四射、極致大氣的交誼廳 */
+        .lounge-scene::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(0, 0, 0, 0.25) 0%, rgba(3, 3, 3, 0.45) 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* 右上角多國語言切換羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            background: rgba(18, 12, 8, 0.85);
+            border: 1px solid #c5a059;
+            border-radius: 4px;
+            padding: 5px 15px;
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .compass-current {
+            color: #ffd700;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: #c5a059;
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(18, 12, 8, 0.95);
+            border: 1px solid #c5a059;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 15px;
+            color: #d4c5b3;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+            /* 💡 補上手指游標 */
+        }
+
+        .lang-opt:hover {
+            background: rgba(107, 33, 168, 0.3);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffd700;
+            background: rgba(197, 160, 89, 0.1);
+        }
+
+        /* 返回大廳鈕 */
+        .back-btn {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 5;
+            color: #ffd700;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 800;
+            border: 1px solid #c5a059;
+            padding: 8px 18px;
+            border-radius: 3px;
+            background: rgba(15, 10, 5, 0.7);
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #6b21a8;
+        }
+
+        /* 左側大廳：羽毛筆投遞入口 */
+        .lounge-left-hall {
+            width: 32%;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .lounge-title {
+            font-family: 'Cinzel', serif;
+            font-size: 32px;
+            font-weight: 900;
+            color: #ffd700;
+            text-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+            margin: 0 0 10px 0;
+            letter-spacing: 2px;
+        }
+
+        .lounge-subtitle {
+            font-size: 13.5px;
+            color: #c5a059;
+            font-weight: 800;
+            letter-spacing: 1px;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+        }
+
+        /* ✉️ 投遞羊皮紙信封表單 */
+        .letter-drop-envelope {
+            background: rgba(18, 12, 8, 0.75);
+            border: 1px solid rgba(197, 160, 89, 0.3);
+            border-radius: 4px;
+            padding: 30px;
+            box-sizing: border-box;
+            backdrop-filter: blur(8px);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6);
+        }
+
+        .form-master-label {
+            font-family: 'Cinzel', serif;
+            font-size: 12.5px;
+            color: #c5a059;
+            font-weight: 900;
+            letter-spacing: 1.5px;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .wizard-input-field {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid rgba(197, 160, 89, 0.25);
+            background: rgba(0, 0, 0, 0.5);
+            color: #f4e8d1;
+            font-size: 14.5px;
+            font-weight: 700;
+            border-radius: 3px;
+            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 22px;
+            font-family: 'Noto Serif TC', serif;
+            transition: all 0.3s;
+        }
+
+        .wizard-input-field:focus {
+            border-color: #ffd700;
+            background: rgba(0, 0, 0, 0.75);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.15);
+        }
+
+        .quill-submit-btn {
+            width: 100%;
+            padding: 13px;
+            background: #1c120c;
+            color: #ffd700;
+            border: 1px solid #c5a059;
+            font-family: 'Noto Serif TC', serif;
+            font-size: 14.5px;
+            font-weight: 900;
+            border-radius: 3px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quill-submit-btn:hover {
+            background: #ffd700;
+            color: #000000;
+            border-color: #ffd700;
+            box-shadow: 0 0 15px #ffd700;
+        }
+
+        /* ==================== 📜 右側大廳：黃銅圖釘魔法佈告欄 ==================== */
+        .lounge-board-wall {
+            width: 68%;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
+            position: relative;
+            z-index: 2;
+            display: flex;
+            flex-wrap: wrap;
+            content-content: flex-start;
+            align-content: flex-start;
+            gap: 30px 25px;
+            padding: 30px 20px;
+            box-sizing: border-box;
+            scrollbar-width: none;
+            perspective: 1000px;
+        }
+
+        .lounge-board-wall::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* 每一張被釘在牆上的獨立羊皮紙便籤 (💡 檔名已完美對齊 .webp) */
+        .message-tag {
+            background-image: url('/static/paper.webp');
+            background-size: cover;
+            background-position: center;
+            width: calc(33.33% - 17px);
+            min-height: 180px;
+            max-height: 240px;
+            border-radius: 2px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.45), inset 0 0 20px rgba(255, 255, 255, 0.2);
+            filter: brightness(1.12);
+            padding: 30px 22px 22px 22px;
+            box-sizing: border-box;
+            color: #1a0f08;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 1;
+        }
+
+        /* 📌 古典立體黃銅圓頭圖釘 */
+        .message-tag::before {
+            content: '';
+            position: absolute;
+            top: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            z-index: 10;
+            background: radial-gradient(circle at 40% 40%, #fff6cc 0%, #ffd700 45%, #b38f00 85%, #4d3d00 100%);
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.6), 0 1px 2px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease;
+        }
+
+        .message-tag:hover {
+            transform: scale(1.04) rotate(0deg) translateZ(15px) !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.65);
+            filter: brightness(1.18);
+            z-index: 50;
+        }
+
+        .message-tag:hover::before {
+            animation: pin-vibrate 0.2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pin-vibrate {
+            0% {
+                transform: translateX(-50%) rotate(-4deg) scale(1.05);
+            }
+
+            100% {
+                transform: translateX(-50%) rotate(4deg) scale(1.05);
+            }
+        }
+
+        .tag-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11.5px;
+            color: #5c4033;
+            font-weight: 800;
+            border-bottom: 1px dashed rgba(92, 64, 51, 0.22);
+            padding-bottom: 8px;
+            margin-bottom: 12px;
+        }
+
+        .tag-name {
+            font-family: 'Cinzel', serif;
+            color: #4a148c;
+            font-weight: 900;
+            font-size: 12.5px;
+        }
+
+        .tag-body {
+            font-size: 14px;
+            line-height: 1.6;
+            font-weight: 800;
+            color: #1a0f08;
+            text-align: justify;
+            overflow-y: auto;
+            scrollbar-width: none;
+            flex-grow: 1;
+        }
+
+        .tag-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        @media (max-width: 900px) {
+            .lounge-scene {
+                flex-direction: column;
+                padding: 60px 15px 30px 15px;
+                gap: 35px;
+            }
+
+            .lounge-left-hall {
+                width: 100%;
+            }
+
+            .lounge-title {
+                font-size: 26px;
+            }
+
+            .lounge-board-wall {
+                width: 100%;
+                height: auto;
+                max-height: none;
+                padding: 10px 0;
+                gap: 25px;
+            }
+
+            .message-tag {
+                width: 100%;
+                transform: rotate(0deg) !important;
+                min-height: 150px;
+                padding: 25px 20px 20px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <a href="/castle" class="back-btn">
+        {% if current_lang == 'zh' %}← 返回大禮堂
+        {% elif current_lang == 'ja' %}← 大広間へ戻る
+        {% elif current_lang == 'ko' %}← 대연회장으로 복귀{% endif %}
+    </a>
+
+    <main id="swup" class="transition-fade">
+        <div class="lounge-scene">
+
+            <div class="lounge-left-hall">
+                <h1 class="lounge-title">THE COMMON ROOM</h1>
+                <p class="lounge-subtitle">
+                    {% if current_lang == 'zh' %}✦ 交誼廳佈告欄：留下巫師的永恆足跡 ✦
+                    {% elif current_lang == 'ja' %}✦ 談話室の掲示板：魔法使いの足跡を刻む ✦
+                    {% elif current_lang == 'ko' %}✦ 공용실 게시판: 마법사들의 영원한 발자취 ✦{% endif %}
+                </p>
+
+                <div class="letter-drop-envelope">
+                    <form id="quill-drop-form" onsubmit="submitQuillMessage(event)">
+                        <label class="form-master-label">✦ WIZARD NAME</label>
+                        <input type="text" name="wizard_name" id="wizard_name" class="wizard-input-field" maxlength="20"
+                            placeholder="{% if current_lang == 'zh' %}輸入你的巫師真名...{% elif current_lang == 'ja' %}魔法使いの名を入力...{% elif current_lang == 'ko' %}마법사 이름을 입력하세요...{% endif %}">
+
+                        <label class="form-master-label">✦ PARCHMENT MESSAGE</label>
+                        <textarea name="wizard_msg" id="wizard_msg" class="wizard-input-field" rows="4" maxlength="200"
+                            style="resize: none;"
+                            placeholder="{% if current_lang == 'zh' %}用魔法羽毛筆寫下留言...{% elif current_lang == 'ja' %}魔法の羽ペンでメッセージを刻む...{% elif current_lang == 'ko' %}마법 깃펜으로 방명록을 작성하세요...{% endif %}"></textarea>
+
+                        <button type="submit" class="quill-submit-btn">
+                            ✦ {% if current_lang == 'zh' %}施咒投遞便籤{% elif current_lang == 'ja' %}呪文でメモを投稿{% elif
+                            current_lang == 'ko' %}주문으로 방명록 투하{% endif %}
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lounge-board-wall" id="lounge-board-wall">
+                {% if messages %}
+                {% for msg in messages %}
+                <div class="message-tag">
+                    <div class="tag-header">
+                        <span class="tag-name">✦ {{ msg.name }}</span>
+                        <span>BULLETIN #{{ loop.revindex }}</span>
+                    </div>
+                    <div class="tag-body">{{ msg.message }}</div>
+                </div>
+                {% endfor %}
+                {% else %}
+                <div id="board-empty-glow"
+                    style="width: 100%; text-align: center; padding-top: 60px; font-style: italic; color: rgba(255,255,255,0.4); font-weight: 700;">
+                    {% if current_lang == 'zh' %}佈告欄正散發著微光，靜待第一位巫師留下足跡...
+                    {% elif current_lang == 'ja' %}掲示板が静かに輝き、最初の魔法使いを待っています...
+                    {% elif current_lang == 'ko' %}掲示板이 은은하게 빛나며 첫 번째 마법사의 발길을 기다립니다...{% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+        </div>
+
+        <script>
+            // 💡 1. 隨機重力傾角魔咒晶片（模組化隔離）
+            function initLoungeMagic() {
+                if (window.innerWidth > 900) {
+                    let tags = document.querySelectorAll('.message-tag');
+                    tags.forEach(tag => {
+                        let randomDegree = (Math.random() * 10 - 5).toFixed(2);
+                        tag.style.transform = `rotate(${randomDegree}deg)`;
+                    });
+                }
+            }
+
+            // 進房當場啟動一次
+            initLoungeMagic();
+
+            // 🛡️ Swup 異步生命週期鉤子：確保不管是換頁進來，隨機角度都不石化卡死！
+            if (window.swup && window.swup.hooks) {
+                window.swup.hooks.on('page:view', initLoungeMagic);
+            }
+
+            // 💡 2. ✒️ 異步羽毛筆投遞 Ajax 引擎核心 (徹底碎裂 Action 表單刷新破綻)
+            function submitQuillMessage(event) {
+                event.preventDefault();
+
+                let nameField = document.getElementById('wizard_name');
+                let msgField = document.getElementById('wizard_msg');
+                let name = nameField.value.trim();
+                let msg = msgField.value.trim();
+
+                // 表單基礎防禦防留空
+                if (!name || !msg) {
+                    let currentLang = "{{ current_lang }}";
+                    if (currentLang === 'ja') alert("🪄 魔法使いの名前和留言内容が空欄です！");
+                    else if (currentLang === 'ko') alert("🪄 마법사 이름과 방명록 내용을 모두 입력해 주세요!");
+                    else alert("🪄 巫師真名與羊皮紙留言欄不得留空！");
+                    return;
+                }
+
+                // 注入魔法異步信使
+                fetch('/lounge', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'wizard_name=' + encodeURIComponent(name) + '&wizard_msg=' + encodeURIComponent(msg)
+                })
+                    .then(response => response.text())
+                    .then(htmlText => {
+                        // 智慧解析拉回來的全新網頁，精準抽取佈告欄並原地更換
+                        let parser = new DOMParser();
+                        let doc = parser.parseFromString(htmlText, 'text/html');
+                        let newBoard = doc.getElementById('lounge-board-wall');
+
+                        if (newBoard) {
+                            document.getElementById('lounge-board-wall').innerHTML = newBoard.innerHTML;
+                            // 原地重洗隨機偏轉魔咒，讓新便籤優雅落地！
+                            initLoungeMagic();
+                            // 投遞成功，高奢排空輸入框
+                            msgField.value = '';
+                        }
+                    })
+                    .catch(err => {
+                        console.error("❌ 羽毛筆魔法打滑:", err);
+                        window.location.reload(); // 萬一打滑，走原地安全刷新備用防線
+                    });
+            }
+
+            // 💡 3. 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 .visit() 最新標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+</body>
+
+</html>

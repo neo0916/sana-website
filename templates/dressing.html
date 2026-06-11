@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Platinum Starlight - VIP 化妝間</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Montserrat:wght@300;400;700&family=Noto+Serif+TC:wght@500;900&display=swap"
+        rel="stylesheet">
+
+    <!-- 🌐 僅在最外層引入 Swup.js 核心，其餘 100% 維持您原本的程式碼 -->
+    <script src="https://unpkg.com/swup@4/dist/Swup.umd.js"></script>
+
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            background-color: #050505;
+            font-family: 'Montserrat', 'Noto Serif TC', serif;
+            color: #ffffff;
+            overflow-x: hidden;
+        }
+
+        /* 🪐 獨立的 Swup 轉場時空特效，完全不干涉您原本的任何視覺樣式 */
+        .transition-fade {
+            transition: opacity 0.35s ease-in-out;
+            opacity: 1;
+        }
+
+        html.is-leaving .transition-fade {
+            opacity: 0;
+        }
+
+        html.is-rendering .transition-fade {
+            opacity: 0;
+        }
+
+        /* 🪐 1. 頂級後台私密背景 (💡 檔名已完美對齊 .webp) */
+        .backstage-container {
+            min-height: 100vh;
+            position: relative;
+            background-image: url('/static/dressing_bg.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            box-sizing: border-box;
+            padding-bottom: 120px;
+        }
+
+        /* 🌐 2. 右上角白金多國語言羅盤 */
+        .lang-compass {
+            position: fixed;
+            top: 30px;
+            right: 40px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-radius: 2px;
+            padding: 8px 18px;
+            font-family: 'Cinzel', serif;
+            font-size: 12px;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            letter-spacing: 1px;
+            width: 135px;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover {
+            border-color: #ffffff;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .compass-current {
+            color: #ffffff;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 25px;
+            width: 100%;
+        }
+
+        .compass-current::after {
+            content: '▼';
+            font-size: 8px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-left: 5px;
+        }
+
+        .lang-dropdown {
+            position: absolute;
+            top: 100%;
+            right: -1px;
+            width: 135px;
+            background: rgba(0, 0, 0, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            border-top: none;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .lang-compass:hover .lang-dropdown {
+            display: flex;
+        }
+
+        .lang-opt {
+            padding: 10px 18px;
+            color: #aaaaaa;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .lang-opt:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+        }
+
+        .lang-opt.active {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        /* 👑 3. 巨星標題區 */
+        .backstage-header {
+            text-align: center;
+            padding-top: 80px;
+            padding-bottom: 50px;
+        }
+
+        .backstage-header h1 {
+            font-family: 'Cinzel', serif;
+            font-size: 42px;
+            font-weight: 900;
+            margin: 0;
+            letter-spacing: 12px;
+        }
+
+        .backstage-header p {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 8px;
+            color: #888888;
+            margin-top: 10px;
+        }
+
+        /* 🧭 4. 五星環繞導覽列 */
+        .starlight-nav {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 100px;
+        }
+
+        .nav-item {
+            font-family: 'Cinzel', serif;
+            font-size: 13px;
+            font-weight: 700;
+            color: #888888;
+            text-decoration: none;
+            letter-spacing: 3px;
+            padding: 10px 0;
+            transition: all 0.4s ease;
+            border-bottom: 1px solid transparent;
+        }
+
+        .nav-item:hover,
+        .nav-item.active {
+            color: #ffffff;
+            border-color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 💄 5. 重力交錯·非對稱網格展示架 */
+        .vanity-grid {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            grid-auto-rows: minmax(180px, auto);
+            perspective: 1000px;
+        }
+
+        /* 🔮 核心魔咒：打破常規的毛玻璃精品置物盒卡片 */
+        .vanity-item {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 2px;
+            padding: 30px;
+            box-sizing: border-box;
+            backdrop-filter: blur(25px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+            animation: floatingRack 6s ease-in-out infinite;
+        }
+
+        /* 💡 巧妙位移：產生高級的交錯落差感 */
+        .vanity-item:nth-child(2n) {
+            transform: translateY(35px);
+            animation-delay: -1.5s;
+            animation-duration: 7s;
+        }
+
+        .vanity-item:nth-child(3n) {
+            transform: translateY(-20px);
+            animation-delay: -3s;
+            animation-duration: 5.5s;
+        }
+
+        .vanity-item:nth-child(4n) {
+            transform: translateY(15px);
+            animation-delay: -4.5s;
+            animation-duration: 8s;
+        }
+
+        /* 後台精緻鋼化玻璃折射微光 */
+        .vanity-item::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -60%;
+            width: 30%;
+            height: 200%;
+            background: linear-gradient(to right, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.08) 50%, rgba(255, 255, 255, 0) 100%);
+            transform: rotate(30deg);
+            transition: 0.8s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .vanity-item:hover::before {
+            left: 150%;
+        }
+
+        .vanity-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7);
+            animation-play-state: paused;
+        }
+
+        /* 原始 JSON 網格定位無縫銜接 */
+        .item-g1 {
+            grid-column: span 2;
+            grid-row: span 2;
+        }
+
+        .item-g2 {
+            grid-column: span 1;
+            grid-row: span 2;
+        }
+
+        .item-g3 {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+
+        .item-g4 {
+            grid-column: span 2;
+            grid-row: span 1;
+        }
+
+        /* 專屬道具立體相片 */
+        .vanity-icon-box {
+            width: 85px;
+            height: 85px;
+            margin-bottom: 20px;
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            filter: drop-shadow(0 8px 15px rgba(0, 0, 0, 0.6));
+            transform: translateZ(20px);
+        }
+
+        .vanity-icon {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .vanity-item:hover .vanity-icon-box {
+            transform: scale(1.15) translateZ(35px);
+        }
+
+        .vanity-name {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-align: center;
+            color: #cccccc;
+            font-family: 'Noto Serif TC', serif;
+            transition: all 0.3s;
+            transform: translateZ(10px);
+        }
+
+        .vanity-item:hover .vanity-name {
+            color: #ffffff;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        /* 🌌 呼吸漂浮動畫定義 */
+        @keyframes floatingRack {
+            0% {
+                transform: translateY(0px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotate(0.5deg);
+            }
+
+            100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+        }
+
+        @keyframes floatingRackEven {
+            0% {
+                transform: translateY(35px) rotate(0deg);
+            }
+
+            50% {
+                transform: translateY(25px) rotate(-0.5deg);
+            }
+
+            100% {
+                transform: translateY(35px) rotate(0deg);
+            }
+        }
+
+        .vanity-item:nth-child(2n) {
+            animation: floatingRackEven 7s ease-in-out infinite;
+        }
+
+        /* 🔍 6. 巨星後台：中央大彈窗 */
+        .backstage-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.4s ease;
+        }
+
+        .backstage-modal.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            background: rgba(15, 15, 15, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            width: 580px;
+            padding: 45px;
+            box-sizing: border-box;
+            text-align: center;
+            position: relative;
+            border-radius: 2px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
+            transform: scale(0.9) translateY(20px);
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+        }
+
+        .backstage-modal.active .modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 24px;
+            color: #888;
+            cursor: pointer;
+            transition: color 0.3s;
+            font-weight: 300;
+        }
+
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        .modal-img-box {
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 25px auto;
+            filter: drop-shadow(0 10px 25px rgba(0, 0, 0, 0.7));
+        }
+
+        .modal-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .modal-title {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            font-family: 'Noto Serif TC', serif;
+            color: #ffffff;
+        }
+
+        .modal-text {
+            font-size: 14.5px;
+            line-height: 2;
+            color: #dddddd;
+            text-align: justify;
+            font-weight: 300;
+        }
+
+        /* 📱 RWD 手機版屏障 */
+        @media (max-width: 900px) {
+            .vanity-grid {
+                grid-template-columns: repeat(2, 1fr);
+                padding: 0 20px;
+                gap: 20px;
+            }
+
+            .item-g1,
+            .item-g2,
+            .item-g3,
+            .item-g4 {
+                grid-column: span 1 !important;
+                grid-row: span 1 !important;
+                transform: none !important;
+                animation: none !important;
+            }
+
+            .starlight-nav {
+                flex-wrap: wrap;
+                gap: 15px 25px;
+                padding: 0 20px;
+                margin-bottom: 50px;
+            }
+
+            .modal-content {
+                width: 95%;
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- 🌐 右上角白金多國語言羅盤 -->
+    <div class="lang-compass">
+        <div class="compass-current">
+            {% if current_lang == 'zh' %}🇹🇼 繁體中文
+            {% elif current_lang == 'ja' %}🇯🇵 日本語
+            {% elif current_lang == 'ko' %}🇰🇷 한국어 {% endif %}
+        </div>
+        <div class="lang-dropdown">
+            <!-- 💡 置換為 <div>，完全免死鎖、零重整異步重載語系！ -->
+            <div onclick="changeLangSecure('zh')" class="lang-opt {% if current_lang == 'zh' %}active{% endif %}">繁體中文
+            </div>
+            <div onclick="changeLangSecure('ja')" class="lang-opt {% if current_lang == 'ja' %}active{% endif %}">日本語
+            </div>
+            <div onclick="changeLangSecure('ko')" class="lang-opt {% if current_lang == 'ko' %}active{% endif %}">한국어
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔮 Swup 核心容器 -->
+    <main id="swup" class="transition-fade">
+        <div class="backstage-container">
+
+            <div class="backstage-header">
+                <a href="/starlight" style="text-decoration: none; color: inherit;">
+                    <h1 style="cursor: pointer;">SANA</h1>
+                </a>
+                <p>Backstage Dressing Private Rack</p>
+            </div>
+
+            <!-- 🧭 五星現代導覽軌道（全站通電異步跳轉！） -->
+            <div class="starlight-nav">
+                <a href="/starlight" class="nav-item">{{ nav.starlight }}</a>
+                <a href="/dressing" class="nav-item active">{{ nav.dressing }}</a>
+                <a href="/studio" class="nav-item">{{ nav.studio }}</a>
+                <a href="/tour" class="nav-item">{{ nav.tour }}</a>
+                <a href="/bubble" class="nav-item">{{ nav.bubble }}</a>
+                <a href="/night_drive" class="nav-item">{{ nav.night_drive }}</a>
+            </div>
+
+            <div class="vanity-grid">
+                {% for item in room_items %}
+                <div class="vanity-item {{ item.style }}"
+                    onclick="openBackstageModal('{{ item.name | escape }}', '{{ item.image }}', '{{ item.fact | escape }}')">
+                    <div class="vanity-icon-box">
+                        <img src="{{ item.image }}" class="vanity-icon" alt="Dressing Item">
+                    </div>
+                    <div class="vanity-name">{{ item.name }}</div>
+                </div>
+                {% endfor %}
+            </div>
+
+        </div>
+
+        <div class="backstage-modal" id="vanityModal" onclick="closeBackstageModal(event)">
+            <div class="modal-content">
+                <span class="modal-close" onclick="closeBackstageModal(event)">&times;</span>
+                <div class="modal-img-box">
+                    <img src="" id="modalImg" class="modal-img" alt="Modal Item">
+                </div>
+                <div class="backstage-modal-title" id="modalTitle"
+                    style="font-size: 22px; font-weight: 900; letter-spacing: 2px; margin-bottom: 20px; font-family: 'Noto Serif TC', serif; color: #ffffff;">
+                </div>
+                <div class="modal-text" id="modalText"></div>
+            </div>
+        </div>
+
+        <script>
+            // 💡 1. 模組化：滑鼠 3D 傾斜矩陣與呼吸動畫啟動器
+            function initDressingMagic() {
+                const cards = document.querySelectorAll('.vanity-item');
+                cards.forEach(card => {
+                    card.addEventListener('mousemove', (e) => {
+                        const rect = card.getBoundingClientRect();
+                        const x = e.clientX - rect.left;
+                        const y = e.clientY - rect.top;
+
+                        const xc = rect.width / 2;
+                        const yc = rect.height / 2;
+
+                        const angleX = (yc - y) / 6;
+                        const angleY = (x - xc) / 6;
+
+                        card.style.transform = `perspective(1000px) rotateX(${angleX}deg) rotateY(${angleY}deg) scale(1.03)`;
+                    });
+
+                    card.addEventListener('mouseleave', () => {
+                        card.style.transform = '';
+                    });
+                });
+            }
+
+            // 進房當場通電一次
+            initDressingMagic();
+
+            // 🛡️ Swup 專屬生命週期鉤子：當異步切換渲染完畢，強制重新灌錄 3D 鏡面晶片，拒絕石化！
+            if (window.swup && window.swup.hooks) {
+                window.swup.hooks.on('page:view', initDressingMagic);
+            }
+
+            // 彈窗控制
+            function openBackstageModal(name, imgSrc, factText) {
+                document.getElementById('modalTitle').innerText = name;
+                document.getElementById('modalImg').src = imgSrc;
+                document.getElementById('modalText').innerText = factText;
+
+                const modal = document.getElementById('vanityModal');
+                modal.style.display = 'flex';
+                setTimeout(() => modal.classList.add('active'), 10);
+            }
+
+            function closeBackstageModal(e) {
+                if (e.target.id === 'vanityModal' || e.target.className === 'modal-close' || e.target.className === 'modal-close' || e.target.innerHTML === '×') {
+                    const modal = document.getElementById('vanityModal');
+                    if (modal) {
+                        modal.classList.remove('active');
+                        setTimeout(() => modal.style.display = 'none', 400);
+                    }
+                }
+            }
+
+            // 🌐 多國語言安全異步切換通道 (精準對齊 Swup v4 visit() 白金標準)
+            function changeLangSecure(targetLang) {
+                document.cookie = "lang=" + targetLang + "; path=/; max-age=31536000";
+                if (window.swup && typeof window.swup.visit === 'function') {
+                    window.swup.visit(window.location.pathname);
+                } else {
+                    window.location.reload();
+                }
+            }
+        </script>
+    </main>
+
+</body>
+
+</html>
